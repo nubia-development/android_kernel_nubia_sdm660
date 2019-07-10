@@ -2071,6 +2071,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 
 	wake_flags &= ~WF_NO_NOTIFIER;
 
+	preempt_disable();
 	if (p == current) {
 		/*
 		 * We're waking current, this means 'p->on_rq' and 'task_cpu(p)
@@ -2085,7 +2086,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 		 */
 		src_cpu = cpu = task_cpu(p);
 		if (!(p->state & state))
-			return false;
+			goto out;
 		success = 1;
 		trace_sched_waking(p);
 		p->state = TASK_RUNNING;
@@ -2216,6 +2217,7 @@ unlock:
 out:
 	if (success)
 		ttwu_stat(p, cpu, wake_flags);
+	preempt_enable();
 
 	if (freq_notif_allowed) {
 		if (!same_freq_domain(src_cpu, cpu)) {
