@@ -1295,6 +1295,17 @@ enum msm_sensor_resolution_t {
 	MSM_SENSOR_RES_5,
 	MSM_SENSOR_RES_6,
 	MSM_SENSOR_RES_7,
+    // ZTEMT: fuyipeng add the res -----start
+	MSM_SENSOR_RES_8,
+	MSM_SENSOR_RES_9,
+	MSM_SENSOR_RES_10,
+	MSM_SENSOR_RES_11,
+	MSM_SENSOR_RES_12,
+	MSM_SENSOR_RES_13,
+	MSM_SENSOR_RES_14,
+	MSM_SENSOR_RES_15,
+	MSM_SENSOR_RES_16,
+    // ZTEMT: fuyipeng add the res -----end
 	MSM_SENSOR_INVALID_RES,
 };
 

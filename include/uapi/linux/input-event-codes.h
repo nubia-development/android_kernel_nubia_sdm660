@@ -186,6 +186,7 @@
 #define KEY_MACRO		112
 #define KEY_MUTE		113
 #define KEY_VOLUMEDOWN		114
+#define KEY_VOICE               216
 #define KEY_VOLUMEUP		115
 #define KEY_POWER		116	/* SC System Power Down */
 #define KEY_KPEQUAL		117
