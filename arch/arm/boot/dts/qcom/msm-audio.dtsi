@@ -833,7 +833,7 @@
 	};
 
 	int_codec: sound {
-		status = "disabled";
+		status = "okay";  //nubia modify
 		compatible = "qcom,sdm660-asoc-snd";
 		qcom,model = "sdm660-snd-card";
 		qcom,wcn-btfm;
@@ -843,25 +843,29 @@
 		qcom,msm-mi2s-master = <1>, <1>, <1>, <1>;
 		qcom,msm-mclk-freq = <9600000>;
 		qcom,msm-mbhc-hphl-swh = <1>;
-		qcom,msm-mbhc-gnd-swh = <1>;
-		qcom,msm-micbias2-ext-cap;
-		qcom,msm-hs-micbias-type = "external";
-		qcom,us-euro-gpios = <&us_euro_gpio>;
+		qcom,msm-mbhc-gnd-swh = <0>; //nubia modify
+		qcom,wsa-disable;  //nubia modify
+		qcom,msm-micbias1-ext-cap;
+		//qcom,msm-micbias2-ext-cap;
+		qcom,msm-hs-micbias-type = "internal";
+		//qcom,us-euro-gpios = <&us_euro_gpio>;  //nubia modify
 		qcom,cdc-pdm-gpios = <&cdc_pdm_gpios>;
 		qcom,cdc-comp-gpios = <&cdc_comp_gpios>;
-		qcom,cdc-dmic-gpios = <&cdc_dmic_gpios>;
+		//qcom,cdc-dmic-gpios = <&cdc_dmic_gpios>; //nubia modify
+		qcom,cdc-ext-spk-gpios = <&spk_ext_gpio>;
+		qcom,msm-spk-ext-pa = <&tlmm 55 0>;
 		qcom,audio-routing =
 			"RX_BIAS", "INT_MCLK0",
 			"SPK_RX_BIAS", "INT_MCLK0",
 			"INT_LDO_H", "INT_MCLK0",
 			"RX_I2S_CLK", "INT_MCLK0",
 			"TX_I2S_CLK", "INT_MCLK0",
-			"MIC BIAS External", "Handset Mic",
-			"MIC BIAS External2", "Headset Mic",
-			"MIC BIAS External", "Secondary Mic",
-			"AMIC1", "MIC BIAS External",
-			"AMIC2", "MIC BIAS External2",
-			"AMIC3", "MIC BIAS External",
+			"MIC BIAS Internal1", "Handset Mic",  //nubia modify
+			"MIC BIAS Internal2", "Headset Mic",
+			"MIC BIAS Internal1", "Secondary Mic",
+			"AMIC1", "MIC BIAS Internal1",
+			"AMIC2", "MIC BIAS Internal2",
+			"AMIC3", "MIC BIAS Internal1",
 			"DMIC1", "MIC BIAS External",
 			"MIC BIAS External", "Digital Mic1",
 			"DMIC2", "MIC BIAS External",
@@ -936,7 +940,7 @@
 					"analog-codec", "msm_sdw_codec",
 					"msm-ext-disp-audio-codec-rx";
 
-		qcom,wsa-max-devs = <2>;
+		qcom,wsa-max-devs = <0>; //nubia modify
 		qcom,wsa-devs = <&wsa881x_211_en>, <&wsa881x_212_en>,
 				<&wsa881x_213_en>, <&wsa881x_214_en>;
 		qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
@@ -944,10 +948,18 @@
 	};
 
 	us_euro_gpio: msm_cdc_pinctrl@75 {
+		status = "disable"; //nubia modify		
 		compatible = "qcom,msm-cdc-pinctrl";
 		pinctrl-names = "aud_active", "aud_sleep";
 		pinctrl-0 = <&wcd_gnd_mic_swap_active>;
 		pinctrl-1 = <&wcd_gnd_mic_swap_idle>;
+	};
+
+	spk_ext_gpio: msm_cdc_pinctrl@55 { //nubia modify
+		compatible = "qcom,msm-cdc-pinctrl";
+		pinctrl-names = "aud_active", "aud_sleep";
+		pinctrl-0 = <&spk_external_pa_active>;
+		pinctrl-1 = <&spk_external_pa_sleep>;
 	};
 
 	wcd9xxx_intc: wcd9xxx-irq {
@@ -959,6 +971,7 @@
 	};
 
 	clock_audio: audio_ext_clk {
+		status = "disable"; //nubia modify
 		compatible = "qcom,audio-ref-clk";
 		qcom,audio-ref-clk-gpio = <&pm660_gpios 3 0>;
 		clock-names = "osr_clk";
@@ -981,6 +994,7 @@
 	};
 
 	wcd_rst_gpio: msm_cdc_pinctrl@64 {
+		status = "disable"; //nubia modify
 		compatible = "qcom,msm-cdc-pinctrl";
 		pinctrl-names = "aud_active", "aud_sleep";
 		pinctrl-0 = <&lpi_cdc_reset_active>;

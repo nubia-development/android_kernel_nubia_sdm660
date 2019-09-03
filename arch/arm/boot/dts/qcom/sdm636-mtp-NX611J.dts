@@ -10,26 +10,23 @@
  * GNU General Public License for more details.
  */
 
-&cdc_pdm_gpios {
- 	status = "okay"; //nubia modify
+
+/dts-v1/;
+
+#include "NX611J/sdm636.dtsi"
+#include "NX611J/sdm636-mtp.dtsi"
+#include "sdm660-internal-codec.dtsi"  //nubia modify
+
+/ {
+	model = "Qualcomm Technologies, Inc. SDM 636 PM660 + PM660L MTP";
+	compatible = "qcom,sdm636-mtp", "qcom,sdm636", "qcom,mtp";
+	qcom,board-id = <8 0>;
+	qcom,pmic-id = <0x0001001b 0x0101011a 0x0 0x0>,
+			<0x0001001b 0x0201011a 0x0 0x0>;
 };
 
-&cdc_comp_gpios {
-	status = "okay"; //nubia modify
+&tavil_snd {
+	qcom,msm-mbhc-moist-cfg = <0>, <0>, <3>;
 };
 
-&cdc_dmic_gpios {
-	status = "disabled";
-};
-
-&cdc_sdw_gpios {
-	status = "disabled";
-};
-
-&wsa_spkr_en1 {
-	status = "disabled";
-};
-
-&wsa_spkr_en2 {
-	status = "disabled";
-};
+#include NUBIA_OVERWRITE_DTSI_FILE

@@ -10,26 +10,19 @@
  * GNU General Public License for more details.
  */
 
-&cdc_pdm_gpios {
- 	status = "okay"; //nubia modify
+#include "sdm660-mtp.dtsi"
+#include "sdm636-camera-sensor-mtp.dtsi"
+/ {
 };
 
-&cdc_comp_gpios {
-	status = "okay"; //nubia modify
+&mdss_dsi {
+	hw-config = "single_dsi";
 };
 
-&cdc_dmic_gpios {
-	status = "disabled";
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_nt35695b_truly_fhd_video>;
 };
 
-&cdc_sdw_gpios {
-	status = "disabled";
-};
-
-&wsa_spkr_en1 {
-	status = "disabled";
-};
-
-&wsa_spkr_en2 {
+&mdss_dsi1 {
 	status = "disabled";
 };

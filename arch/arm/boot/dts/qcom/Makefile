@@ -326,8 +326,10 @@ dtb-$(CONFIG_ARCH_SDM630) += sdm630-rumi.dtb \
 	sdm455-internal-codec-rcm.dtb
 
 ifeq ($(CONFIG_ARM64),y)
-always          := $(dtb-y)
-always          += $(dtbo-y)
+#always          := $(dtb-y)
+#always          += $(dtbo-y)
+always          := $(ZTEMT_DTS_NAME)
+
 subdir-y        := $(dts-dirs)
 else
 targets += dtbs
