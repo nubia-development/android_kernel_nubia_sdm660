@@ -36,6 +36,3 @@
 &soc {
 	/delete-node/sound-9335;
 };
-
-
-#include NUBIA_OVERWRITE_DTSI_FILE
