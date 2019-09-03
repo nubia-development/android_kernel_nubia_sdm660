@@ -326,11 +326,14 @@ dtb-$(CONFIG_ARCH_SDM630) += sdm630-rumi.dtb \
 	sdm455-internal-codec-rcm.dtb
 
 ifeq ($(CONFIG_ARM64),y)
-#always          := $(dtb-y)
-#always          += $(dtbo-y)
-always          := $(ZTEMT_DTS_NAME)
-
+ifeq ($(CONFIG_MACH_NUBIA_NX611J),y)
+always          += sdm660-mtp-NX611J.dtb \
+                   sdm636-mtp-NX611J.dtb
 subdir-y        := $(dts-dirs)
+else
+always          += $(dtbo-y)
+subdir-y        := $(dts-dirs)
+endif
 else
 targets += dtbs
 targets += $(addprefix ../, $(dtb-y))
