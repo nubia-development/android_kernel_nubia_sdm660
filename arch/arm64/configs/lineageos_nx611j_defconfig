@@ -738,3 +738,6 @@ CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR=y
 
 # Nubia configuration options
 CONFIG_MACH_NUBIA_NX611J=y
+
+# Enable exfat support
+CONFIG_EXFAT_FS=y
