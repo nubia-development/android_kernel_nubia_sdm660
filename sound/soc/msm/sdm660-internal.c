@@ -10,6 +10,7 @@
  * GNU General Public License for more details.
  */
 
+/*#define DEBUG */
 #include <linux/of_gpio.h>
 #include <linux/platform_device.h>
 #include <linux/module.h>
@@ -1332,17 +1333,18 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	 * 210-290 == Button 2
 	 * 360-680 == Button 3
 	 */
-	btn_low[0] = 75;
-	btn_high[0] = 75;
-	btn_low[1] = 150;
-	btn_high[1] = 150;
-	btn_low[2] = 225;
-	btn_high[2] = 225;
-	btn_low[3] = 450;
-	btn_high[3] = 450;
-	btn_low[4] = 500;
-	btn_high[4] = 500;
-
+//nubia modify for headset button detect ----start
+	btn_low[0] = 110;
+	btn_high[0] = 110;
+	btn_low[1] = 240;
+	btn_high[1] = 240;
+	btn_low[2] = 437;
+	btn_high[2] = 437;
+	btn_low[3] = 437;
+	btn_high[3] = 437;
+	btn_low[4] = 437;
+	btn_high[4] = 437;
+//nubia modify for headset button detect ----end
 	return msm_int_wcd_cal;
 }
 
@@ -1397,6 +1399,7 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_ignore_suspend(dapm, "DMIC2");
 	snd_soc_dapm_ignore_suspend(dapm, "DMIC3");
 	snd_soc_dapm_ignore_suspend(dapm, "DMIC4");
+	snd_soc_dapm_ignore_suspend(dapm, "Ext Spk");//modify by wanggaodeng
 
 	snd_soc_dapm_sync(dapm);
 

@@ -17,7 +17,14 @@
 #include <sound/core.h>
 #include <sound/soc.h>
 #include <sound/pcm.h>
+/*add by wanggaodeng patch */
+#define AUDIO_MSM_ADSP_PATCH 1
 
+#ifdef AUDIO_MSM_ADSP_PATCH
+#include <linux/workqueue.h>
+#include <linux/delay.h>
+
+#endif
 
 static int msm_pcm_hostless_prepare(struct snd_pcm_substream *substream)
 {

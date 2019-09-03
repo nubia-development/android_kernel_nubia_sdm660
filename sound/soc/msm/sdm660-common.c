@@ -10,6 +10,7 @@
  * GNU General Public License for more details.
  */
 
+/*#define DEBUG */
 #include <linux/input.h>
 #include <linux/of_gpio.h>
 #include <linux/mfd/msm-cdc-pinctrl.h>
@@ -198,14 +199,14 @@ static bool msm_swap_gnd_mic(struct snd_soc_codec *codec);
 static struct wcd_mbhc_config mbhc_cfg = {
 	.read_fw_bin = false,
 	.calibration = NULL,
-	.detect_extn_cable = true,
+	.detect_extn_cable = false, //nubia modify for headset detect
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
 	.key_code[0] = KEY_MEDIA,
-	.key_code[1] = KEY_VOICECOMMAND,
-	.key_code[2] = KEY_VOLUMEUP,
-	.key_code[3] = KEY_VOLUMEDOWN,
+	.key_code[1] = KEY_VOLUMEUP, //nubia modify for headset detect
+	.key_code[2] = KEY_VOLUMEDOWN,
+	.key_code[3] = KEY_VOICECOMMAND,
 	.key_code[4] = 0,
 	.key_code[5] = 0,
 	.key_code[6] = 0,
@@ -2631,8 +2632,9 @@ void msm_mi2s_snd_shutdown(struct snd_pcm_substream *substream)
 }
 EXPORT_SYMBOL(msm_mi2s_snd_shutdown);
 
+//nubia move for doesn't support US EU switch ----start
 /* Validate whether US EU switch is present or not */
-static int msm_prepare_us_euro(struct snd_soc_card *card)
+/*static int msm_prepare_us_euro(struct snd_soc_card *card)
 {
 	struct msm_asoc_mach_data *pdata =
 				snd_soc_card_get_drvdata(card);
@@ -2650,7 +2652,8 @@ static int msm_prepare_us_euro(struct snd_soc_card *card)
 	}
 
 	return ret;
-}
+}*/
+//nubia move for doesn't support US EU switch ----end
 
 static bool msm_swap_gnd_mic(struct snd_soc_codec *codec)
 {
@@ -3078,10 +3081,12 @@ static void i2s_auxpcm_init(struct platform_device *pdev)
 static const struct of_device_id sdm660_asoc_machine_of_match[]  = {
 	{ .compatible = "qcom,sdm660-asoc-snd",
 	  .data = "internal_codec"},
-	{ .compatible = "qcom,sdm660-asoc-snd-tasha",
+	//nubia move for doesn't support ----start
+	/*{ .compatible = "qcom,sdm660-asoc-snd-tasha",
 	  .data = "tasha_codec"},
 	{ .compatible = "qcom,sdm660-asoc-snd-tavil",
-	  .data = "tavil_codec"},
+	  .data = "tavil_codec"},*/
+	//nubia move for doesn't support ----end
 	{},
 };
 
@@ -3165,10 +3170,12 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 		mbhc_cfg.swap_gnd_mic = msm_swap_gnd_mic;
 	}
 
-	ret = msm_prepare_us_euro(card);
+//nubia move for doesn't support US EU switch ----start
+	/*ret = msm_prepare_us_euro(card);
 	if (ret)
 		dev_dbg(&pdev->dev, "msm_prepare_us_euro failed (%d)\n",
-			ret);
+			ret);*/
+//nubia move for doesn't support US EU switch ----end
 
 	i2s_auxpcm_init(pdev);
 
