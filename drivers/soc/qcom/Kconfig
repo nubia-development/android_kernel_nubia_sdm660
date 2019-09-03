@@ -55,6 +55,10 @@ config QPNP_HAPTIC
 	  module provides haptic feedback for user actions such as a long press
 	  on the touch screen.  It uses the Android timed-output framework.
 
+config FEATURE_ZTEMT_HAPTIC_VIBRATOR
+        tristate "FEATURE_ZTEMT_HAPTIC_VIBRATOR"
+        depends on QPNP_HAPTIC
+        default n
 config QPNP_PBS
 	tristate "PBS trigger support for QPNP PMIC"
 	depends on SPMI

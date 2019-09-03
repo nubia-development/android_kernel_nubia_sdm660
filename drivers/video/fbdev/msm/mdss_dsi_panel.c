@@ -27,6 +27,12 @@
 #include "mdss_dba_utils.h"
 #include "mdss_debug.h"
 #include "mdss_livedisplay.h"
+#if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO) || defined(CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+#include "../../nubia/display/nubia_lcd_feature.h"
+#endif
+#if defined (CONFIG_NUBIA_DISP_LCD_PREFERENCE) || defined (CONFIG_NUBIA_LCD_BACKLIGHT_CURVE)
+#include "../../nubia/display/nubia_disp_preference.h"
+#endif
 
 #define DT_CMD_HDR 6
 #define DEFAULT_MDP_TRANSFER_TIME 14000
@@ -410,6 +416,16 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 	pr_debug("%s: enable = %d\n", __func__, enable);
 
 	if (enable) {
+#if defined (CONFIG_NUBIA_DISP_JDI_HX83112A) || defined (CONFIG_NUBIA_DISP_LEAD_HX83112A)
+#if defined (CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+		if(nubia_hx_smwp_en())
+		{
+			gpio_set_value((ctrl_pdata->rst_gpio),0);
+			gpio_free(ctrl_pdata->rst_gpio);
+			usleep_range(5000, 5000);
+		}
+#endif
+#endif
 		rc = mdss_dsi_request_gpios(ctrl_pdata);
 		if (rc) {
 			pr_err("gpio request failed\n");
@@ -435,14 +451,35 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 					goto exit;
 				}
 			}
-
+#if defined (CONFIG_NUBIA_DISP_JDI_HX83112A) || defined (CONFIG_NUBIA_DISP_LEAD_HX83112A)
+			for (i = 0; i < pdata->panel_info.rst_seq_len-1; ++i) {
+				gpio_set_value((ctrl_pdata->rst_gpio),
+					pdata->panel_info.rst_seq[i]);
+				if (pdata->panel_info.rst_seq[i])
+					usleep_range(pinfo->rst_seq[i] * 1000, pinfo->rst_seq[i] * 1000);
+			}
+			//pull up tprst
+#if defined (CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+			if(!nubia_hx_smwp_en())
+			{
+				nubia_set_tp_reset(1);
+			}
+#else
+			nubia_set_tp_reset(1);
+#endif
+			//continue lcd lcd rst
+			gpio_set_value((ctrl_pdata->rst_gpio),
+				pdata->panel_info.rst_seq[i]);
+			if (pdata->panel_info.rst_seq[i])
+				usleep_range(pinfo->rst_seq[i] * 1000, pinfo->rst_seq[i] * 1000);
+#else
 			for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
 				gpio_set_value((ctrl_pdata->rst_gpio),
 					pdata->panel_info.rst_seq[i]);
 				if (pdata->panel_info.rst_seq[++i])
 					usleep_range(pinfo->rst_seq[i] * 1000, pinfo->rst_seq[i] * 1000);
 			}
-
+#endif
 			if (gpio_is_valid(ctrl_pdata->avdd_en_gpio)) {
 				if (ctrl_pdata->avdd_en_gpio_invert) {
 					rc = gpio_direction_output(
@@ -499,6 +536,16 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 		}
 		gpio_set_value((ctrl_pdata->rst_gpio), 0);
 		gpio_free(ctrl_pdata->rst_gpio);
+		//pull down tprst
+#if defined (CONFIG_NUBIA_DISP_JDI_HX83112A) || defined (CONFIG_NUBIA_DISP_LEAD_HX83112A)
+#if defined (CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+		if(!nubia_hx_smwp_en()){
+			nubia_set_tp_reset(0);
+		}
+#else
+		nubia_set_tp_reset(0);
+#endif
+#endif
 		if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
 			gpio_set_value(ctrl_pdata->lcd_mode_sel_gpio, 0);
 			gpio_free(ctrl_pdata->lcd_mode_sel_gpio);
@@ -852,7 +899,9 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 	struct mdss_dsi_ctrl_pdata *sctrl = NULL;
-
+#ifdef CONFIG_NUBIA_DISP_LCD_PREFERENCE
+	static u32 last_level = -1;
+#endif
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return;
@@ -914,6 +963,16 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 			__func__);
 		break;
 	}
+#ifdef CONFIG_NUBIA_DISP_LCD_PREFERENCE
+	if(last_level == -1){
+		last_level = bl_level;
+		return;
+	}
+	if(last_level == 0 || bl_level == 0){
+		pr_err("%s: set bl level: %d\n", __func__,bl_level);
+		last_level = bl_level;
+	}
+#endif
 }
 
 static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
@@ -965,6 +1024,9 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 				(void *)(unsigned long) MODE_UPDATE_ALL);
 
 end:
+#ifdef CONFIG_NUBIA_DISP_LCD_PREFERENCE
+	set_panel_ready_for_cmd(1);
+#endif
 	pr_debug("%s:-\n", __func__);
 	return ret;
 }
@@ -1021,7 +1083,9 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	pinfo = &pdata->panel_info;
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
-
+#ifdef CONFIG_NUBIA_DISP_LCD_PREFERENCE
+	set_panel_ready_for_cmd(0);
+#endif
 	pr_debug("%s: ctrl=%pK ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 	if (pinfo->dcs_cmd_by_left) {
@@ -2976,6 +3040,15 @@ static int mdss_panel_parse_dt(struct device_node *np,
 		strlcpy(ctrl_pdata->bridge_name, bridge_chip_name,
 			MSM_DBA_CHIP_NAME_MAX_LEN);
 	}
+#if defined (CONFIG_NUBIA_DISP_LCD_PREFERENCE)
+	nubia_lcd_preference_parse_dt(np);
+#endif
+#if defined (CONFIG_NUBIA_LCD_BACKLIGHT_CURVE)
+	nubia_lcd_bl_curve_parse_dt(np);
+#endif
+#if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)
+	nubia_lcd_feature_parse_dt(np);
+#endif
 
 	rc = of_property_read_u32(np,
 		"qcom,mdss-dsi-host-esc-clk-freq-hz",
@@ -3036,6 +3109,8 @@ int mdss_dsi_panel_init(struct device_node *node,
 	ctrl_pdata->panel_data.apply_display_setting =
 			mdss_dsi_panel_apply_display_setting;
 	ctrl_pdata->switch_mode = mdss_dsi_panel_switch_mode;
-
+#ifdef CONFIG_NUBIA_DISP_LCD_PREFERENCE
+	nubia_set_dsi_ctrl(ctrl_pdata);
+#endif
 	return 0;
 }

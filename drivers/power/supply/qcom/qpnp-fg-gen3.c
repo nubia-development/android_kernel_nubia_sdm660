@@ -984,6 +984,9 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 	struct device_node *batt_node, *profile_node;
 	const char *data;
 	int rc, len;
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	int temp=0;
+#endif
 
 	batt_node = of_find_node_by_name(node, "qcom,battery-data");
 	if (!batt_node) {
@@ -993,6 +996,19 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 
 	profile_node = of_batterydata_get_best_profile(batt_node,
 				chip->batt_id_ohms / 1000, NULL);
+
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	if (IS_ERR(profile_node) ||!profile_node){
+		rc = of_property_read_u32(node, "nubia,use-default-batt-id", &temp);
+		if(rc < 0)
+			pr_err("get use-default-batt-id error\n");
+
+		pr_err("couldn't find profile handle,use nubia default batt id =%d\n",temp);
+		profile_node = of_batterydata_get_best_profile(batt_node,
+				temp, NULL);
+	}
+#endif
+
 	if (IS_ERR(profile_node))
 		return PTR_ERR(profile_node);
 
@@ -1146,6 +1162,24 @@ static void fg_notify_charger(struct fg_chip *chip)
 
 	if (!chip->profile_available)
 		return;
+
+#if defined(CONFIG_NUBIA_HW_STEP_CHARGE_FEATURE)
+	if(!strcmp(chip->bp.batt_type_str, "atl_3450mah_step")){
+		prop.intval = 1;
+		rc = power_supply_set_property(chip->batt_psy,
+				POWER_SUPPLY_PROP_STEP_CHARGING_ENABLED, &prop);
+		if (rc < 0) {
+			pr_err("Error in setting step charging enable property on batt_psy, rc=%d\n",
+				rc);
+			return;
+		}
+	}
+	#endif
+
+	#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	if(chip->bp.float_volt_uv < 0 ||chip->bp.fastchg_curr_ma <0)
+		return;
+#endif
 
 	prop.intval = chip->bp.float_volt_uv;
 	rc = power_supply_set_property(chip->batt_psy,
@@ -3081,6 +3115,17 @@ done:
 	batt_psy_initialized(chip);
 	fg_notify_charger(chip);
 	chip->profile_loaded = true;
+
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	chip->soc_monitor_work_votable = find_votable("SOC_MONITOR");
+	if (chip->soc_monitor_work_votable == NULL) {
+		pr_err("NEO: can't find SOC_MONITOR votable\n");
+	} 
+	else {
+		vote(chip->soc_monitor_work_votable, "FG_PROFILE_VOTER", true, 0);
+	}
+#endif
+
 	fg_dbg(chip, FG_STATUS, "profile loaded successfully");
 out:
 	chip->soc_reporting_ready = true;

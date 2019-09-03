@@ -59,6 +59,9 @@
 #include "mdss_smmu.h"
 
 #include "mdss_mdp_trace.h"
+#if defined (CONFIG_NUBIA_DISP_LCD_PANEL_ID)
+#include "../../nubia/display/nubia_lcd_feature.h"
+#endif
 
 #define AXI_HALT_TIMEOUT_US	0x4000
 #define AUTOSUSPEND_TIMEOUT_MS	200
@@ -2541,7 +2544,9 @@ static int mdss_mdp_get_pan_cfg(struct mdss_panel_cfg *pan_cfg)
 	strlcpy(&pan_cfg->arg_cfg[0], t, sizeof(pan_cfg->arg_cfg));
 	pr_debug("%d: t=[%s] panel name=[%s]\n", __LINE__,
 		t, pan_cfg->arg_cfg);
-
+#if defined(CONFIG_NUBIA_DISP_LCD_PANEL_ID)
+	nubia_mdss_mdp_get_pan_id(pan_cfg->arg_cfg);
+#endif
 	panel_len = strlen(pan_cfg->arg_cfg);
 	if (!panel_len) {
 		pr_err("Panel name is invalid\n");

@@ -254,7 +254,6 @@ static ssize_t msm_rpmstats_file_read(struct file *file, char __user *bufu,
 
 	mutex_lock(&rpm_stats_mutex);
 	prvdata = file->private_data;
-
 	if (!prvdata) {
 		ret = -EINVAL;
 		goto exit;

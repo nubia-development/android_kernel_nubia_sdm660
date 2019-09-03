@@ -35,6 +35,9 @@
 #include "mdss_dsi_phy.h"
 #include "mdss_dba_utils.h"
 #include "mdss_livedisplay.h"
+#if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)|| defined(CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+#include "../../nubia/display/nubia_lcd_feature.h"
+#endif
 
 #define CMDLINE_DSI_CTL_NUM_STRING_LEN 2
 
@@ -378,6 +381,30 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
+#if defined (CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+	if(!nubia_hx_smwp_en()){
+		ret = mdss_dsi_panel_reset(pdata, 0);
+		if (ret) {
+			pr_warn("%s: Panel reset failed. rc=%d\n", __func__, ret);
+			ret = 0;
+		}
+
+		if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
+			pr_debug("reset disable: pinctrl not enabled\n");
+
+
+		ret = msm_dss_enable_vreg(
+			ctrl_pdata->panel_power_data.vreg_config,
+			ctrl_pdata->panel_power_data.num_vreg, 0);
+		if (ret)
+			pr_err("%s: failed to disable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+
+#if defined(CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)
+		nubia_set_vddio_power(false);
+#endif
+	}
+#else
 	ret = mdss_dsi_panel_reset(pdata, 0);
 	if (ret) {
 		pr_warn("%s: Panel reset failed. rc=%d\n", __func__, ret);
@@ -387,6 +414,7 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
 		pr_debug("reset disable: pinctrl not enabled\n");
 
+
 	ret = msm_dss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 0);
@@ -394,6 +422,10 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 		pr_err("%s: failed to disable vregs for %s\n",
 			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
 
+#if defined(CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)
+	nubia_set_vddio_power(false);
+#endif
+#endif
 end:
 	return ret;
 }
@@ -410,7 +442,24 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
-
+#if defined (CONFIG_NUBIA_DISP_KEEP_POWER_ON)
+	if(!nubia_hx_smwp_en()){
+#if defined(CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)
+		nubia_set_vddio_power(true);
+#endif
+		ret = msm_dss_enable_vreg(
+			ctrl_pdata->panel_power_data.vreg_config,
+			ctrl_pdata->panel_power_data.num_vreg, 1);
+		if (ret) {
+			pr_err("%s: failed to enable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+			return ret;
+		}
+	}
+#else
+#if defined(CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)
+	nubia_set_vddio_power(true);
+#endif
 	ret = msm_dss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 1);
@@ -419,6 +468,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
 		return ret;
 	}
+#endif
 
 	/*
 	 * If continuous splash screen feature is enabled, then we need to

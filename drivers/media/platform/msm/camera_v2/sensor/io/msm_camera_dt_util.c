@@ -25,6 +25,11 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
+/*ZTEMT: fengxun add for backend dual camera --Start*/
+extern int s5k2x7sx_state;
+extern int s5k4e8_state;
+/*ZTEMT: fengxun add for backend dual camera --End*/
+
 int msm_camera_fill_vreg_params(struct camera_vreg_t *cam_vreg,
 	int num_vreg, struct msm_sensor_power_setting *power_setting,
 	uint16_t power_setting_size)
@@ -1518,7 +1523,7 @@ int msm_camera_power_up(struct msm_camera_power_ctrl_t *ctrl,
 					&power_setting->data[0],
 					1);
 			else
-				pr_err("%s: %d usr_idx:%d dts_idx:%d\n",
+				CDBG("%s: %d usr_idx:%d dts_idx:%d\n",
 					__func__, __LINE__,
 					power_setting->seq_val, ctrl->num_vreg);
 
@@ -1682,10 +1687,17 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 			if (!ctrl->gpio_conf->gpio_num_info->valid
 				[pd->seq_val])
 				continue;
-			gpio_set_value_cansleep(
-				ctrl->gpio_conf->gpio_num_info->gpio_num
-				[pd->seq_val],
-				(int) pd->config_val);
+			/*ZTEMT: fengxun add for backend dual camera --Start*/
+			if ((s5k2x7sx_state == 1) && (s5k4e8_state == 1)
+					&& (pd->seq_val == SENSOR_GPIO_VANA)) {
+				break;
+			} else {
+				gpio_set_value_cansleep(
+					ctrl->gpio_conf->gpio_num_info->gpio_num
+					[pd->seq_val],
+					(int) pd->config_val);
+			}
+			/*ZTEMT: fengxun add for backend dual camera --End*/
 			break;
 		case SENSOR_VREG:
 			if (pd->seq_val == INVALID_VREG)
@@ -1713,13 +1725,20 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 						__func__, __LINE__, pd->seq_val,
 						ctrl->num_vreg);
 			} else
-				pr_err("%s error in power up/down seq data\n",
+				CDBG("%s error in power up/down seq data\n",
 								__func__);
-			ret = msm_cam_sensor_handle_reg_gpio(pd->seq_val,
-				ctrl->gpio_conf, GPIOF_OUT_INIT_LOW);
-			if (ret < 0)
-				pr_err("ERR:%s Error while disabling VREG GPIO\n",
-					__func__);
+			/*ZTEMT: fengxun add for backend dual camera --Start*/
+			if ((s5k2x7sx_state == 1) && (s5k4e8_state == 1)
+					&& ((pd->seq_val == CAM_VIO) || (pd->seq_val == CAM_VANA))) {
+				break;
+			} else {
+				ret = msm_cam_sensor_handle_reg_gpio(pd->seq_val,
+					ctrl->gpio_conf, GPIOF_OUT_INIT_LOW);
+				if (ret < 0)
+					pr_err("ERR:%s Error while disabling VREG GPIO\n",
+						__func__);
+			}
+			/*ZTEMT: fengxun add for backend dual camera --End*/
 			break;
 		case SENSOR_I2C_MUX:
 			if (ctrl->i2c_conf && ctrl->i2c_conf->use_i2c_mux)

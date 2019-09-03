@@ -26,8 +26,8 @@
 #include <linux/uaccess.h>
 
 #include "rpm_stats.h"
-
-#define RPM_MASTERS_BUF_LEN 400
+//#define RPM_MASTERS_BUF_LEN 400
+#define RPM_MASTERS_BUF_LEN 500
 
 #define SNPRINTF(buf, size, format, ...) \
 	do { \
@@ -447,7 +447,6 @@ static  int msm_rpm_master_stats_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, dent);
 	return 0;
 }
-
 static int msm_rpm_master_stats_remove(struct platform_device *pdev)
 {
 	struct dentry *dent;

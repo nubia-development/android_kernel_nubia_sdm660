@@ -26,6 +26,9 @@ DEFINE_MSM_MUTEX(msm_eeprom_mutex);
 static struct v4l2_file_operations msm_eeprom_v4l2_subdev_fops;
 #endif
 
+#define CAL_DATA_START           0x17F3
+#define CAL_DATA_END             0x1FF2
+
 /**
   * msm_get_read_mem_size - Get the total size for allocation
   * @eeprom_map_array:	mem map
@@ -562,7 +565,7 @@ static int eeprom_init_config(struct msm_eeprom_ctrl_t *e_ctrl,
 	rc = eeprom_parse_memory_map(e_ctrl, memory_map_arr);
 	if (rc < 0) {
 		pr_err("%s::%d memory map parse failed\n", __func__, __LINE__);
-		goto free_mem;
+		//goto free_mem; // ZTEMT: fuyipeng error power down the camera
 	}
 
 	rc = msm_camera_power_down(power_info, e_ctrl->eeprom_device_type,
@@ -613,6 +616,169 @@ static int eeprom_config_read_cal_data(struct msm_eeprom_ctrl_t *e_ctrl,
 	return rc;
 }
 
+//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- start
+static int write_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl, uint32_t size, uint8_t* buffer)
+{
+	int rc = 0;
+	uint32_t i = 0;
+	uint8_t *buffer_read = NULL;
+	int check_sum = 0;
+        uint16_t sid_tmp = 0; 
+        uint16_t readdata = 0;
+        uint32_t num_byte = size;
+        uint32_t  write_width = 32, write_num = 0;
+
+	if (!e_ctrl) {
+		pr_err("%s e_ctrl is NULL", __func__);
+		return -EINVAL;
+	}
+        //return rc;//add for temporay
+        msleep(50);//ZTEMT: li.bin223 add for improve write eeprom
+
+        //save SID 0x50 (0xA0>>1)
+        sid_tmp = e_ctrl->i2c_client.cci_client->sid;
+        //modify SID to 0xB0 (CSP addr)
+        e_ctrl->i2c_client.cci_client->sid = 0xB0 >> 1;
+
+        #if 1 //fordebug
+        rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_read(&(e_ctrl->i2c_client),
+	                              0xFFFF, &readdata, MSM_CAMERA_I2C_BYTE_DATA);
+        if(rc < 0)
+        {
+             pr_err("%s : %d, read data failed", __func__, __LINE__);
+        }
+        pr_err("%s : %d, read data : %d", __func__, __LINE__, readdata);
+        usleep_range(10000, 11000);
+        #endif
+
+        //unlock
+        rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write(&(e_ctrl->i2c_client),
+                                                                      0xFFFF, 0x1D, MSM_CAMERA_I2C_BYTE_DATA);//0x1D is unlock
+        if(rc < 0)
+        {
+             pr_err("%s : %d, write data failed", __func__, __LINE__);
+        }
+        usleep_range(10000, 11000);
+
+        #if 1 //fordebug
+        rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_read(&(e_ctrl->i2c_client),
+	                              0xFFFF, &readdata, MSM_CAMERA_I2C_BYTE_DATA);
+        if(rc < 0)
+        {
+             pr_err("%s : %d, read data failed", __func__, __LINE__);
+        }
+        pr_err("%s : %d, read data : %d", __func__, __LINE__, readdata);
+        usleep_range(10000, 11000);
+        #endif
+
+        //write data
+        //restore SID to 0x50(0xA0 >> 1)
+        e_ctrl->i2c_client.cci_client->sid = sid_tmp;
+
+        if (num_byte < 32)
+	{
+		pr_err("%s  num_byte is smaller than 32 ,error\n", __func__);
+		goto END;
+	}
+
+	//frist_write_width
+	write_width = 32 - (CAL_DATA_START % 32);
+
+	for (i = 0; i < num_byte;)
+	{
+		//update write_width
+		if (num_byte - write_num < 32)
+		{
+			write_width = num_byte - write_num;
+		}
+		pr_err("remain num = %d addr= %x write_width = %d \n",
+				num_byte - write_num, CAL_DATA_START + i, write_width);
+
+
+		rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write_seq(
+                                                               &(e_ctrl->i2c_client), 
+                                                               CAL_DATA_START + i,
+                                                               buffer + i,
+                                                               write_width);
+		if ( rc < 0)
+		{
+                    pr_err("%s %d, i2c_write_seq error\n", __func__, __LINE__);
+                    goto END;
+		}
+
+		write_num += write_width;
+		i += write_width;
+		write_width = 32;
+
+		usleep_range(5000, 6000);
+	}
+
+        //write checksum data
+        for(i = 0; i < size; i++)
+        {
+            check_sum += buffer[i];
+        }
+	check_sum %= 256;
+    
+	rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write(
+			&(e_ctrl->i2c_client),
+			CAL_DATA_END + 1,
+			check_sum,
+			MSM_CAMERA_I2C_BYTE_DATA);
+        if(rc < 0)
+        {
+             pr_err("%s : %d, write data failed", __func__, __LINE__);
+        }
+        usleep_range(10000, 11000);
+
+         //lock eeprom
+         e_ctrl->i2c_client.cci_client->sid = 0xB0 >> 1;//CSP mode
+         rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_write(&(e_ctrl->i2c_client),
+                                                                      0xFFFF, 0x1F, MSM_CAMERA_I2C_BYTE_DATA);//0x1F is lock
+
+        usleep_range(10000, 11000);
+        e_ctrl->i2c_client.cci_client->sid = sid_tmp;
+	//check data
+	buffer_read = kzalloc(sizeof(uint8_t) * (size + 1), GFP_KERNEL);
+	if (!buffer_read) {
+		pr_err("%s:%d kzalloc failed\n", __func__, __LINE__);
+		return -ENOMEM;
+	}
+
+	rc = e_ctrl->i2c_client.i2c_func_tbl->i2c_read_seq(
+				&(e_ctrl->i2c_client),
+				CAL_DATA_START,
+				buffer_read,
+				size+1);
+
+	if ( rc < 0) {
+                pr_err("%s : %d, i2c read seq data failed", __func__, __LINE__);
+		kfree(buffer_read);
+		goto END;
+	}
+
+	for (i = 0; i < size ; i++) {
+		if (buffer[i] != buffer_read[i]) {
+			pr_err("%s data error, addr=0x%X, write data =0x%X, read data=0x%X",
+				__func__, i, buffer[i], buffer_read[i]);
+			rc = -EINVAL;
+			break;
+		}
+	}
+        if(check_sum != buffer_read[size])
+        {
+             pr_err("%s %d, checksum data error, write data =0x%X, read data=0x%X",
+				__func__, __LINE__, check_sum, buffer_read[size]);
+	     rc = -EINVAL;
+        }
+
+	kfree(buffer_read);
+END:
+        pr_err("%s: %d, print log before the func return, rc = %d", __func__, __LINE__, rc);
+        return rc;
+}
+//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- end
+
 static int msm_eeprom_config(struct msm_eeprom_ctrl_t *e_ctrl,
 	void __user *argp)
 {
@@ -620,6 +786,10 @@ static int msm_eeprom_config(struct msm_eeprom_ctrl_t *e_ctrl,
 		(struct msm_eeprom_cfg_data *)argp;
 	int rc = 0;
 	size_t length = 0;
+	//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- start
+	uint8_t *buffer;
+	uint32_t size;
+	//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- end
 
 	CDBG("%s E\n", __func__);
 	switch (cdata->cfgtype) {
@@ -674,6 +844,31 @@ static int msm_eeprom_config(struct msm_eeprom_ctrl_t *e_ctrl,
 				__func__, __LINE__);
 		}
 		break;
+	//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- start
+	case CFG_EEPROM_DO_CALIBRATION:
+		CDBG("%s E CFG_EEPROM_READ_CAL_DATA\n", __func__);
+		size = cdata->cfg.write_data.num_bytes;
+		buffer = kzalloc(size * (sizeof(uint8_t)), GFP_KERNEL);
+		if (!buffer) {
+		pr_err("%s:%d failed\n", __func__, __LINE__);
+			rc = -ENOMEM;
+			return rc;
+		}
+		if (copy_from_user(buffer, cdata->cfg.write_data.dbuffer ,size * sizeof(uint8_t))) {
+			pr_err("%s:%d failed\n", __func__, __LINE__);
+			kfree(buffer);
+			rc = -EFAULT;
+			return rc;
+		}
+		rc = write_eeprom_memory(e_ctrl, size, buffer);
+		if (rc < 0) {
+			pr_err("%s write eeprom failed",__func__);
+			kfree(buffer);
+			return rc;
+		}
+		kfree(buffer);
+		break;
+	//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- end
 	default:
 		break;
 	}
@@ -1460,7 +1655,7 @@ static int eeprom_init_config32(struct msm_eeprom_ctrl_t *e_ctrl,
 	if (rc < 0) {
 		pr_err("%s:%d memory map parse failed\n",
 			__func__, __LINE__);
-		goto free_mem;
+		//goto free_mem; // ZTEMT: fuyipeng error power down the camera
 	}
 
 	rc = msm_camera_power_down(power_info,
@@ -1478,6 +1673,37 @@ free_mem:
 	mem_map_array = NULL;
 	return rc;
 }
+
+//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- start
+static int write_eeprom_memory32(struct msm_eeprom_ctrl_t *e_ctrl, void __user *arg)
+{
+	int rc;
+	uint8_t *buffer;
+	uint32_t size;
+	struct msm_eeprom_cfg_data32 *cdata32 =
+		(struct msm_eeprom_cfg_data32 *) arg;
+
+	size = cdata32->cfg.write_data.num_bytes;
+
+	buffer = kzalloc(size * (sizeof(uint8_t)), GFP_KERNEL);
+	if (!buffer) {
+			pr_err("%s:%d failed\n", __func__, __LINE__);
+			rc = -ENOMEM;
+			return rc;
+	}
+	if (copy_from_user(buffer, (void *)compat_ptr(cdata32->cfg.write_data.dbuffer) ,size * sizeof(uint8_t))) {
+			pr_err("%s:%d failed\n", __func__, __LINE__);
+			kfree(buffer);
+			rc = -EFAULT;
+			return rc;
+	}
+
+	rc = write_eeprom_memory(e_ctrl, size , buffer);
+
+	kfree(buffer);
+	return rc;
+}
+//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- end
 
 static int msm_eeprom_config32(struct msm_eeprom_ctrl_t *e_ctrl,
 	void __user *argp)
@@ -1534,6 +1760,16 @@ static int msm_eeprom_config32(struct msm_eeprom_ctrl_t *e_ctrl,
 				__func__, __LINE__);
 		}
 		break;
+	//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- start
+	case CFG_EEPROM_DO_CALIBRATION:
+		CDBG("%s E CFG_EEPROM_READ_CAL_DATA\n", __func__);
+		rc = write_eeprom_memory32(e_ctrl, argp);
+		if (rc < 0) {
+			pr_err("%s write eeprom failed",__func__);
+			return rc;
+		}
+		break;
+	//ZTEMT:zhouruoyu add for factory altek 3D calibration ----- end
 	default:
 		break;
 	}
