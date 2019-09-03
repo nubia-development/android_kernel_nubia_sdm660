@@ -1,0 +1,9 @@
+/*
+ * nubia overwrite dts
+ */
+
+#include "sdm660-nubia-display.dtsi"
+#include "sdm660-nubia-touch.dtsi"
+#include "sdm660-nubia-nfc.dtsi"
+#include "sdm660-nubia-sensors.dtsi"
+

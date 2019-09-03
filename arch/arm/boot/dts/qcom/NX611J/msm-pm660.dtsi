@@ -342,6 +342,7 @@
 			qcom,bat-temp-limit-support;
 			qcom,bat-temp-limit-current = <1000000>;
 			qcom,bat-temp-jeita-current = <250000>;
+			qcom,bat-temp-jeita-cool-low-current = <720000>;
 			qcom,bat-temp-limit-threshold = <400>;
 			qcom,bat-temp-limit-voltage = <4100>;
 
