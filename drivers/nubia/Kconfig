@@ -68,3 +68,37 @@ endif
 endif
 
 endmenu
+
+
+# Nubia sdm636 / sdm660 devices configuration options
+
+config MACH_NUBIA
+    bool "NUBIA device"
+    depends on ARCH_QCOM
+    help
+      Support for Nubia products
+
+config MACH_NUBIA_SDM636
+    bool "NUBIA SDM636"
+    depends on ARCH_SDM636
+    select MACH_NUBIA
+    help
+      Support for SDM636 Nubia variants
+
+config MACH_NUBIA_SDM660
+    bool "NUBIA SDM660"
+    depends on ARCH_SDM660
+    select MACH_NUBIA
+    help
+      Support for SDM660 Nubia variants
+
+menu "Nubia board selection"
+
+config MACH_NUBIA_NX611J
+    bool "NUBIA_NX611J board"
+    select MACH_NUBIA_SDM636
+    select MACH_NUBIA_SDM660
+    help
+      Support for Nubia Z18 Mini variant
+
+endmenu
