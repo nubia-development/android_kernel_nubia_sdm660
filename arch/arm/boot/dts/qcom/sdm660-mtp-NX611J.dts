@@ -36,3 +36,4 @@
 &soc {
 	/delete-node/sound-9335;
 };
+#include "NX611J/sdm660-nubia-head.dtsi"

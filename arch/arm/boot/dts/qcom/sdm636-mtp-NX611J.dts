@@ -28,3 +28,4 @@
 &tavil_snd {
 	qcom,msm-mbhc-moist-cfg = <0>, <0>, <3>;
 };
+#include "NX611J/sdm660-nubia-head.dtsi"

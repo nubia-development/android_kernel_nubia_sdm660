@@ -2719,6 +2719,3 @@
 
 #include "sdm660-mdss.dtsi"
 #include "sdm660-mdss-pll.dtsi"
-#include "sdm660-display.dtsi"
-#include "sdm660-touch.dtsi"
-#include "sdm660-nubia-head.dtsi"
