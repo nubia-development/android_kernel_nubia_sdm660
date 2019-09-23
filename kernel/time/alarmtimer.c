@@ -716,8 +716,6 @@ enum alarmtimer_type clock2alarm(clockid_t clockid)
 		return ALARM_REALTIME;
 	if (clockid == CLOCK_BOOTTIME_ALARM)
 		return ALARM_BOOTTIME;
-	if (clockid == CLOCK_POWEROFF_ALARM)
-		return ALARM_POWEROFF_REALTIME;
 	return -1;
 }
 
@@ -1113,7 +1111,6 @@ static int __init alarmtimer_init(void)
 
 	posix_timers_register_clock(CLOCK_REALTIME_ALARM, &alarm_clock);
 	posix_timers_register_clock(CLOCK_BOOTTIME_ALARM, &alarm_clock);
-	posix_timers_register_clock(CLOCK_POWEROFF_ALARM, &alarm_clock);
 
 	/* Initialize alarm bases */
 	alarm_bases[ALARM_REALTIME].base_clockid = CLOCK_REALTIME;
