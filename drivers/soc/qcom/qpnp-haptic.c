@@ -369,8 +369,6 @@ struct qpnp_hap {
 	struct mutex			lock;
 	struct mutex			wf_lock;
 	spinlock_t			bus_lock;
-	spinlock_t			td_lock;
-	struct work_struct		td_work;
 	struct completion		completion;
 	enum qpnp_hap_mode		play_mode;
 	u32				misc_clk_trim_error_reg;
@@ -418,7 +416,6 @@ struct qpnp_hap {
 	bool				auto_mode;
 	bool				override_auto_mode_config;
 	bool				play_irq_en;
-	int				td_time_ms;
 #ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
 	u32 ztemt_vibrator_ms;
 	u32 ztemt_last_play_time_ms;
@@ -2890,6 +2887,7 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 	}
 
 	hap_info("nubia hap->play_mode:%d [%s] ",hap->play_mode,temp_str);
+
 	hap->vmax_mv = QPNP_HAP_VMAX_MAX_MV;
 	rc = of_property_read_u32(pdev->dev.of_node, "qcom,vmax-mv", &temp);
 	if (!rc) {
@@ -3083,7 +3081,6 @@ static int qpnp_haptic_probe(struct platform_device *pdev)
 
 	mutex_init(&hap->lock);
 	mutex_init(&hap->wf_lock);
-	spin_lock_init(&hap->td_lock);
 	INIT_WORK(&hap->work, qpnp_hap_worker);
 	INIT_DELAYED_WORK(&hap->sc_work, qpnp_handle_sc_irq);
 	init_completion(&hap->completion);
