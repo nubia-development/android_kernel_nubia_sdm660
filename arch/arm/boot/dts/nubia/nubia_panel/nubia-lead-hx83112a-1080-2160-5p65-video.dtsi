@@ -115,6 +115,23 @@
 			//enter sleep mode
 			05 01 00 00 02 00 01 10
 		];
+		cm,mdss-livedisplay-command-state = "dsi_lp_mode";
+		cm,mdss-livedisplay-cabc-ui-cmd = [
+			39 01 00 00 00 00 02 53 2c
+			39 01 00 00 00 00 02 55 81
+			];
+		cm,mdss-livedisplay-cabc-image-cmd = [
+			39 01 00 00 00 00 02 53 2c
+			39 01 00 00 00 00 02 55 82
+		];
+		cm,mdss-livedisplay-cabc-video-cmd = [
+			39 01 00 00 00 00 02 53 2c
+			39 01 00 00 00 00 02 55 83
+		];
+        cm,mdss-livedisplay-cabc-cmd = [
+			39 01 00 00 00 00 02 53 2c
+			39 01 00 00 00 00 02 55 00
+		];
 		nubia,mdss-dsi-panel-backlight-curve = <
 		0 34 34 34 35 35 36 36
 		37 37 38 38 39 39 40 40
