@@ -88,15 +88,6 @@
 		(x)->i_mode = ((x)->i_mode & S_IFMT) | 0775;\
 	} while (0)
 
-//Nubia FileObserver Begin
-#ifdef ENABLE_FILE_OBSERVER
-struct sdcardfs_file_creator {
-    uid_t uid;
-    pid_t pid;
-};
-#endif
-//Nubia FileObserver End
-
 /* Android 5.0 support */
 
 /* Permission mode for a specific node. Controls how file permissions
@@ -164,13 +155,6 @@ extern int sdcardfs_interpose(struct dentry *dentry, struct super_block *sb,
 struct sdcardfs_file_info {
 	struct file *lower_file;
 	const struct vm_operations_struct *lower_vm_ops;
-
-//Nubia FileObserver Begin
-    #ifdef ENABLE_FILE_OBSERVER
-    struct sdcardfs_file_creator creator;
-    __u32 mask;
-    #endif
-//Nubia FileObserver End
 };
 
 struct sdcardfs_inode_data {
@@ -662,8 +646,7 @@ static inline bool str_n_case_eq(const char *s1, const char *s2, size_t len)
 
 static inline bool qstr_case_eq(const struct qstr *q1, const struct qstr *q2)
 {
-	return q1->len == q2->len && str_n_case_eq(q1->name, q2->name, q1->len);
-	//return q1->len == q2->len && str_case_eq(q1->name, q2->name);
+	return q1->len == q2->len && str_n_case_eq(q1->name, q2->name, q2->len);
 }
 
 #define QSTR_LITERAL(string) QSTR_INIT(string, sizeof(string)-1)
