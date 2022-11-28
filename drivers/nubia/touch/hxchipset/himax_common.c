@@ -243,7 +243,7 @@ int himax_input_register(struct himax_ts_data *ts)
     set_bit(KEY_F9, ts->input_dev->keybit);
 #endif
 #if defined (NUBIA_TP_HIMAX_SMART_WAKEUP)
-    set_bit(KEY_F10, ts->input_dev->keybit);
+    set_bit(KEY_WAKEUP, ts->input_dev->keybit);
 #endif
 #if defined(HX_SMART_WAKEUP)
     set_bit(KEY_CUST_01, ts->input_dev->keybit);
@@ -629,7 +629,7 @@ void himax_wake_check_func(void)
     {
     case EV_GESTURE_PWR:
 #if defined (NUBIA_TP_HIMAX_SMART_WAKEUP)
-        KEY_EVENT = KEY_F10;
+        KEY_EVENT = KEY_WAKEUP;
 #else
         KEY_EVENT = KEY_POWER;
 #endif
