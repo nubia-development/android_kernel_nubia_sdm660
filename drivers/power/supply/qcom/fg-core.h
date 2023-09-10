@@ -438,6 +438,9 @@ struct fg_dev {
 	struct votable		*awake_votable;
 	struct votable		*delta_bsoc_irq_en_votable;
 	struct votable		*batt_miss_irq_en_votable;
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	struct votable		*soc_monitor_work_votable;
+#endif
 	struct fg_sram_param	*sp;
 	struct fg_memif		sram;
 	struct fg_alg_flag	*alg_flags;
