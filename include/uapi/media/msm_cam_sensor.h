@@ -65,6 +65,17 @@ enum msm_sensor_resolution_t {
 	MSM_SENSOR_RES_5,
 	MSM_SENSOR_RES_6,
 	MSM_SENSOR_RES_7,
+    // ZTEMT: fuyipeng add the res -----start
+	MSM_SENSOR_RES_8,
+	MSM_SENSOR_RES_9,
+	MSM_SENSOR_RES_10,
+	MSM_SENSOR_RES_11,
+	MSM_SENSOR_RES_12,
+	MSM_SENSOR_RES_13,
+	MSM_SENSOR_RES_14,
+	MSM_SENSOR_RES_15,
+	MSM_SENSOR_RES_16,
+    // ZTEMT: fuyipeng add the res -----end
 	MSM_SENSOR_INVALID_RES,
 };
 
@@ -266,6 +277,7 @@ enum eeprom_cfg_type_t {
 	CFG_EEPROM_WRITE_DATA,
 	CFG_EEPROM_GET_MM_INFO,
 	CFG_EEPROM_INIT,
+	CFG_EEPROM_DO_CALIBRATION,//ZTEMT:zhouruoyu add for factory altek 3D calibration
 };
 
 struct eeprom_get_t {
@@ -357,6 +369,7 @@ enum msm_sensor_cfg_type_t {
 	CFG_WRITE_I2C_ARRAY_ASYNC,
 	CFG_WRITE_I2C_ARRAY_SYNC,
 	CFG_WRITE_I2C_ARRAY_SYNC_BLOCK,
+	CFG_READ_I2C_SEQ,//ZTEMT: guxiaodong add for i2c read seq
 };
 
 enum msm_actuator_cfg_type_t {
@@ -513,6 +526,8 @@ struct msm_actuator_set_position_t {
 	uint32_t hw_params;
 	uint16_t pos[MAX_NUMBER_OF_STEPS];
 	uint16_t delay[MAX_NUMBER_OF_STEPS];
+	int16_t  dac_output; //jixd add for reset optimize
+	uint8_t  use_dac_value; //jixd add for reset optimize
 };
 
 struct msm_actuator_cfg_data {

@@ -5,7 +5,7 @@
 
 #define KVERSION 0x1
 
-#define MAX_POWER_CONFIG      12
+#define MAX_POWER_CONFIG      16 //ZTEMT: li.bin1 modify it
 #define GPIO_OUT_LOW          (0 << 1)
 #define GPIO_OUT_HIGH         (1 << 1)
 #define CSI_EMBED_DATA        0x12
@@ -198,6 +198,12 @@ enum msm_flash_cfg_type_t {
 	CFG_FLASH_OFF,
 	CFG_FLASH_LOW,
 	CFG_FLASH_HIGH,
+	//ZTEMT: added by congshan for front camera flash start
+	CFG_LCD_BKL_NORM,
+	CFG_LCD_BKL_LOW,
+	CFG_LCD_BKL_HIGH,
+	CFG_LCD_BKL_SET,
+	//ZTEMT: added by congshan for front camera flash end
 };
 
 enum msm_ir_led_cfg_type_t {
@@ -332,7 +338,24 @@ struct msm_camera_i2c_reg_setting {
 	enum msm_camera_i2c_data_type data_type;
 	unsigned short delay;
 };
-
+//ZTEMT: guxiaodong add for i2c read seq ---start
+struct msm_camera_i2c_read_seq_config {
+	uint16_t slave_addr;
+	uint16_t reg_addr;
+	enum msm_camera_i2c_reg_addr_type addr_type;
+	enum msm_camera_i2c_data_type data_type;
+	uint8_t *dbuffer;
+        uint32_t num_bytes;
+};
+struct msm_camera_i2c_read_seq_config32 {
+	uint16_t slave_addr;
+	uint16_t reg_addr;
+	enum msm_camera_i2c_reg_addr_type addr_type;
+	enum msm_camera_i2c_data_type data_type;
+	uint32_t dbuffer;
+        uint32_t num_bytes;
+};
+//ZTEMT: guxiaodong add for i2c read seq ---end
 struct msm_camera_csid_vc_cfg {
 	unsigned char cid;
 	unsigned char dt;
