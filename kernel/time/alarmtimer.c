@@ -56,6 +56,39 @@ static struct wakeup_source *ws;
 static struct rtc_timer		rtctimer;
 static struct rtc_device	*rtcdev;
 static DEFINE_SPINLOCK(rtcdev_lock);
+#ifdef CONFIG_NUBIA_POWEROFF_CHARGE_MODE_POWEROFF_ALARM
+#include <linux/reboot.h>
+
+static struct work_struct charger_mode_restart_work;
+static bool poweroff_charge_mode = false;
+
+static int get_poweroff_charge_mode(char *options)
+{
+	if(strncmp(options,"charger",strlen("charger"))==0){
+		printk(KERN_ERR"Charger mode!!!");
+		poweroff_charge_mode = true;
+	}
+
+	return 1;
+}
+__setup("androidboot.mode=",get_poweroff_charge_mode);
+
+static void charger_mode_restart_work_func(struct work_struct *work)
+{
+	kernel_restart("rtc");
+}
+
+static enum alarmtimer_restart init_alarm_handle(struct alarm *alarm,ktime_t now)
+{
+	if(poweroff_charge_mode){
+		printk(KERN_ERR"Will reboot for poweroff alarm!!!!");
+		INIT_WORK(&charger_mode_restart_work,charger_mode_restart_work_func);
+		schedule_work(&charger_mode_restart_work);
+	}
+
+	return ALARMTIMER_NORESTART;
+}
+#endif
 
 static void alarmtimer_triggered_func(void *p)
 {
