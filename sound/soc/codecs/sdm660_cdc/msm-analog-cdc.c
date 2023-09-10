@@ -560,7 +560,7 @@ static void msm_anlg_cdc_mbhc_internal_micbias_ctrl(struct snd_soc_codec *codec,
 		if (enable)
 			snd_soc_update_bits(codec,
 				MSM89XX_PMIC_ANALOG_MICB_1_INT_RBIAS,
-				0x10, 0x10);
+				0x1c, 0x1c);  //modify by wanggaode 0x10, 0x10
 		else
 			snd_soc_update_bits(codec,
 				MSM89XX_PMIC_ANALOG_MICB_1_INT_RBIAS,
@@ -2550,7 +2550,8 @@ static int msm_anlg_cdc_codec_enable_micbias(struct snd_soc_dapm_widget *w,
 				snd_soc_update_bits(codec,
 					MSM89XX_PMIC_ANALOG_TX_1_2_ATEST_CTL_2,
 					0x02, 0x02);
-			snd_soc_update_bits(codec, micb_int_reg, 0x80, 0x80);
+			// Nubia mod by LiuTao, 2018-04-24, for knowles mic
+			// snd_soc_update_bits(codec, micb_int_reg, 0x80, 0x80);
 		} else if (strnstr(w->name, internal2_text, strlen(w->name))) {
 			snd_soc_update_bits(codec, micb_int_reg, 0x10, 0x10);
 			snd_soc_update_bits(codec, w->reg, 0x60, 0x00);
