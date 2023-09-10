@@ -13,6 +13,11 @@ config QCOM_COMMAND_DB
 	  resource on a RPM-hardened platform must use this database to get
 	  SoC specific identifier and information for the shared resources.
 
+config FEATURE_ZTEMT_HAPTIC_VIBRATOR
+        tristate "FEATURE_ZTEMT_HAPTIC_VIBRATOR"
+        depends on QPNP_HAPTIC
+        default n
+
 config QCOM_MEM_OFFLINE
 	bool "Dynamic Memory Region Offline driver"
 	depends on MEMORY_HOTPLUG
