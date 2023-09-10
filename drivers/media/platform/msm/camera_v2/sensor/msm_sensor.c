@@ -21,6 +21,10 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
+/*ZTEMT: fengxun add for backend dual camera --Start*/
+int s5k2x7sx_state = MSM_SENSOR_POWER_DOWN;
+int s5k4e8_state = MSM_SENSOR_POWER_DOWN;
+/*ZTEMT: fengxun add for backend dual camera --End*/
 static struct msm_camera_i2c_fn_t msm_sensor_cci_func_tbl;
 static struct msm_camera_i2c_fn_t msm_sensor_secure_func_tbl;
 
@@ -268,8 +272,20 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		return rc;
 	}
 
-	pr_debug("%s: read id: 0x%x expected id 0x%x:\n",
+	// ZTEMT: li.bin1 modify it --start
+	pr_info("%s: read id: 0x%x expected id 0x%x\n",
 			__func__, chipid, slave_info->sensor_id);
+
+	if (!s_ctrl->is_probe_succeed && chipid == 0x2187) {
+		uint16_t revision = 0;
+		sensor_i2c_client->i2c_func_tbl->i2c_read(
+			sensor_i2c_client, 0x02,
+			&revision, MSM_CAMERA_I2C_BYTE_DATA);
+		pr_info("%s: slave_id: 0x%x revision: 0x%x\n",
+			__func__, chipid, revision);
+	}
+	// ZTEMT: li.bin1 modify it --end
+
 	if (msm_sensor_id_by_mask(s_ctrl, chipid) != slave_info->sensor_id) {
 		pr_err("%s chip id %x does not match %x\n",
 				__func__, chipid, slave_info->sensor_id);
@@ -592,6 +608,96 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 		}
 		break;
 	}
+        //ZTEMT: guxiaodong add for i2c read seq ---start
+        case CFG_READ_I2C_SEQ: {
+            struct msm_camera_i2c_read_seq_config32 read_seq_config;
+            uint16_t orig_slave_addr = 0, read_slave_addr = 0;
+	    uint16_t orig_addr_type = 0, read_addr_type = 0;
+            uint8_t *readdata_ptr;
+            uint32_t num_bytes;
+
+            if (s_ctrl->is_csid_tg_mode)
+			goto DONE;
+
+            if (copy_from_user(&read_seq_config, (void *)compat_ptr(cdata->cfg.setting),
+			sizeof(struct msm_camera_i2c_read_seq_config32))) {
+			pr_err("%s:%d copy from user failed\n", __func__, __LINE__);
+			rc = -EFAULT;
+			break;
+	    }
+            read_slave_addr = read_seq_config.slave_addr;
+            read_addr_type = read_seq_config.addr_type;
+            num_bytes = read_seq_config.num_bytes;
+            CDBG("xdgu num_bytes: %d, addr_type %d, slave_addr :0x%x", num_bytes, read_seq_config.addr_type, read_seq_config.slave_addr);
+            readdata_ptr = kzalloc(num_bytes*sizeof(uint8_t), GFP_KERNEL);
+            if (!readdata_ptr) {
+                rc = -ENOMEM;
+                pr_err("%s failed line %d\n", __func__, __LINE__);
+                break;
+            }
+            CDBG("%s:CFG_READ_SEQ_I2C:", __func__);
+            CDBG("%s:slave_addr=0x%x reg_addr=0x%x, data_type=%d\n",
+                    __func__, read_seq_config.slave_addr,
+                    read_seq_config.reg_addr, read_seq_config.data_type);
+
+            if (s_ctrl->sensor_i2c_client->cci_client) {
+                orig_slave_addr =
+                        s_ctrl->sensor_i2c_client->cci_client->sid;
+                s_ctrl->sensor_i2c_client->cci_client->sid =
+                        read_slave_addr >> 1;
+            } else if (s_ctrl->sensor_i2c_client->client) {
+                orig_slave_addr =
+                        s_ctrl->sensor_i2c_client->client->addr;
+                s_ctrl->sensor_i2c_client->client->addr =
+                        read_slave_addr >> 1;
+            } else {
+                pr_err("%s: error: no i2c/cci client found.", __func__);
+                rc = -EFAULT;
+                kfree(readdata_ptr);
+                break;
+            }
+            CDBG("%s:orig_slave_addr=0x%x, new_slave_addr=0x%x",
+                __func__, orig_slave_addr,
+                read_slave_addr >> 1);
+
+            orig_addr_type = s_ctrl->sensor_i2c_client->addr_type;
+		s_ctrl->sensor_i2c_client->addr_type = read_addr_type;
+
+            rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_read_seq(
+                                s_ctrl->sensor_i2c_client, read_seq_config.reg_addr,
+                                readdata_ptr, num_bytes);
+
+            if (s_ctrl->sensor_i2c_client->cci_client) {
+                s_ctrl->sensor_i2c_client->cci_client->sid =
+                       orig_slave_addr;
+            } else if (s_ctrl->sensor_i2c_client->client) {
+                s_ctrl->sensor_i2c_client->client->addr =
+                       orig_slave_addr;
+            }
+            s_ctrl->sensor_i2c_client->addr_type = orig_addr_type;
+
+            pr_debug("slave_read %x %x\n", read_slave_addr,
+            read_seq_config.reg_addr);
+
+            if (rc < 0) {
+                pr_err("%s:%d: i2c_read_seq failed\n", __func__, __LINE__);
+                kfree(readdata_ptr);
+                break;
+            }
+
+            if (copy_to_user((void *)(unsigned long)read_seq_config.dbuffer,
+                             (void *)readdata_ptr, num_bytes)) {
+                pr_err("%s:%d failed\n", __func__, __LINE__);
+                rc = -EFAULT;
+                kfree(readdata_ptr);
+                break;
+            }
+
+            kfree(readdata_ptr);
+
+            break;
+        }
+        //ZTEMT: guxiaodong add for i2c read seq ---end
 	case CFG_SLAVE_WRITE_I2C_ARRAY: {
 		struct msm_camera_i2c_array_write_config32 write_config32;
 		struct msm_camera_i2c_array_write_config write_config;
@@ -781,6 +887,16 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 				break;
 			}
 			s_ctrl->sensor_state = MSM_SENSOR_POWER_UP;
+			/*ZTEMT: fengxun add for backend dual camera --Start*/
+			if (strncmp(s_ctrl->sensordata->sensor_name, "s5k2x7", 6)==0) {
+				pr_err("%s:%d s5k2x7sx_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k2x7sx_state = s_ctrl->sensor_state;
+			}
+			if (strncmp(s_ctrl->sensordata->sensor_name, "s5k4e8", 6)==0) {
+				pr_err("%s:%d s5k4e8_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k4e8_state = s_ctrl->sensor_state;
+			}
+			/*ZTEMT: fengxun add for backend dual camera --End*/
 			CDBG("%s:%d sensor state %d\n", __func__, __LINE__,
 				s_ctrl->sensor_state);
 		} else {
@@ -810,6 +926,16 @@ static int msm_sensor_config32(struct msm_sensor_ctrl_t *s_ctrl,
 				break;
 			}
 			s_ctrl->sensor_state = MSM_SENSOR_POWER_DOWN;
+			/*ZTEMT: fengxun add for backend dual camera --Start*/
+			if(strncmp(s_ctrl->sensordata->sensor_name,"s5k2x7", 6)==0){
+				pr_err("%s:%d s5k2x7sx_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k2x7sx_state = s_ctrl->sensor_state;
+			}
+			if(strncmp(s_ctrl->sensordata->sensor_name,"s5k4e8", 6)==0){
+				pr_err("%s:%d s5k4e8_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k4e8_state = s_ctrl->sensor_state;
+			}
+			/*ZTEMT: fengxun add for backend dual camera --End*/
 			CDBG("%s:%d sensor state %d\n", __func__, __LINE__,
 				s_ctrl->sensor_state);
 		} else {
@@ -1111,6 +1237,96 @@ int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp)
 		}
 		break;
 	}
+        //ZTEMT: guxiaodong add for i2c read seq ---start
+        case CFG_READ_I2C_SEQ: {
+            struct msm_camera_i2c_read_seq_config read_seq_config;
+            uint16_t orig_slave_addr = 0, read_slave_addr = 0;
+	    uint16_t orig_addr_type = 0, read_addr_type = 0;
+            uint8_t *readdata_ptr;
+            uint32_t num_bytes;
+
+            if (s_ctrl->is_csid_tg_mode)
+			goto DONE;
+
+            if (copy_from_user(&read_seq_config, (void *)(cdata->cfg.setting),
+			sizeof(struct msm_camera_i2c_read_seq_config))) {
+			pr_err("%s:%d copy from user failed\n", __func__, __LINE__);
+			rc = -EFAULT;
+			break;
+	    }
+            read_slave_addr = read_seq_config.slave_addr;
+            read_addr_type = read_seq_config.addr_type;
+            num_bytes = read_seq_config.num_bytes;
+            pr_err("xdgu num_bytes: %d, addr_type %d, slave_addr :%d", num_bytes, read_seq_config.addr_type, read_seq_config.slave_addr);
+            readdata_ptr = kzalloc(num_bytes*sizeof(uint8_t), GFP_KERNEL);
+            if (!readdata_ptr) {
+                rc = -ENOMEM;
+                pr_err("%s failed line %d\n", __func__, __LINE__);
+                break;
+            }
+            CDBG("%s:CFG_READ_SEQ_I2C:", __func__);
+            CDBG("%s:slave_addr=0x%x reg_addr=0x%x, data_type=%d\n",
+                    __func__, read_seq_config.slave_addr,
+                    read_seq_config.reg_addr, read_seq_config.data_type);
+
+            if (s_ctrl->sensor_i2c_client->cci_client) {
+                orig_slave_addr =
+                        s_ctrl->sensor_i2c_client->cci_client->sid;
+                s_ctrl->sensor_i2c_client->cci_client->sid =
+                        read_slave_addr >> 1;
+            } else if (s_ctrl->sensor_i2c_client->client) {
+                orig_slave_addr =
+                        s_ctrl->sensor_i2c_client->client->addr;
+                s_ctrl->sensor_i2c_client->client->addr =
+                        read_slave_addr >> 1;
+            } else {
+                pr_err("%s: error: no i2c/cci client found.", __func__);
+                rc = -EFAULT;
+                kfree(readdata_ptr);
+                break;
+            }
+            CDBG("%s:orig_slave_addr=0x%x, new_slave_addr=0x%x",
+                __func__, orig_slave_addr,
+                read_slave_addr >> 1);
+
+            orig_addr_type = s_ctrl->sensor_i2c_client->addr_type;
+            s_ctrl->sensor_i2c_client->addr_type = read_addr_type;
+
+            rc = s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_read_seq(
+                                s_ctrl->sensor_i2c_client, read_seq_config.reg_addr,
+                                readdata_ptr, num_bytes);
+
+            if (s_ctrl->sensor_i2c_client->cci_client) {
+                s_ctrl->sensor_i2c_client->cci_client->sid =
+                        orig_slave_addr;
+            } else if (s_ctrl->sensor_i2c_client->client) {
+                s_ctrl->sensor_i2c_client->client->addr =
+                        orig_slave_addr;
+            }
+            s_ctrl->sensor_i2c_client->addr_type = orig_addr_type;
+
+            pr_debug("slave_read %x %x\n", read_slave_addr,
+            read_seq_config.reg_addr);
+
+            if (rc < 0) {
+                pr_err("%s:%d: i2c_read_seq failed\n", __func__, __LINE__);
+                kfree(readdata_ptr);
+                break;
+            }
+
+            if (copy_to_user(read_seq_config.dbuffer,
+                             readdata_ptr, num_bytes)) {
+                pr_err("%s:%d failed\n", __func__, __LINE__);
+                rc = -EFAULT;
+                kfree(readdata_ptr);
+                break;
+            }
+
+            kfree(readdata_ptr);
+
+            break;
+        }
+        //ZTEMT: guxiaodong add for i2c read seq ---end
 	case CFG_SLAVE_WRITE_I2C_ARRAY: {
 		struct msm_camera_i2c_array_write_config write_config;
 		struct msm_camera_i2c_reg_array *reg_setting = NULL;
@@ -1272,6 +1488,16 @@ int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp)
 				break;
 			}
 			s_ctrl->sensor_state = MSM_SENSOR_POWER_UP;
+			/*ZTEMT: fengxun add for backend dual camera --Start*/
+			if(strncmp(s_ctrl->sensordata->sensor_name,"s5k2x7",6)==0){
+				pr_err("%s:%d s5k2x7_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k2x7sx_state = s_ctrl->sensor_state;
+			}
+			if(strncmp(s_ctrl->sensordata->sensor_name,"s5k4e8",6)==0){
+				pr_err("%s:%d s5k4e8_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k4e8_state = s_ctrl->sensor_state;
+			}
+			/*ZTEMT: fengxun add for backend dual camera --End*/
 			CDBG("%s:%d sensor state %d\n", __func__, __LINE__,
 				s_ctrl->sensor_state);
 		} else {
@@ -1302,6 +1528,16 @@ int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp)
 				break;
 			}
 			s_ctrl->sensor_state = MSM_SENSOR_POWER_DOWN;
+			/*ZTEMT: fengxun add for backend dual camera --Start*/
+			if(strncmp(s_ctrl->sensordata->sensor_name,"s5k2x7", 6)==0){
+				pr_err("%s:%d s5k2x7sx_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k2x7sx_state = s_ctrl->sensor_state;
+			}
+			if(strncmp(s_ctrl->sensordata->sensor_name,"s5k4e8", 6)==0){
+				pr_err("%s:%d s5k4e8_state = %d\n", __func__,__LINE__, s_ctrl->sensor_state);
+				s5k4e8_state = s_ctrl->sensor_state;
+			}
+			/*ZTEMT: fengxun add for backend dual camera --End*/
 			CDBG("%s:%d sensor state %d\n", __func__, __LINE__,
 				s_ctrl->sensor_state);
 		} else {
