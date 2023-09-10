@@ -1,1 +1,1 @@
-obj-$(CONFIG_NUBIA_SUNWAVE_FINGERPRINT)	+= sf_ctl.o sf_spi.o
+obj-$(CONFIG_NUBIA_SUNWAVE_FP)	+= sf_ctl.o sf_spi.o
