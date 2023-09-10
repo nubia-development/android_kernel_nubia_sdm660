@@ -15,7 +15,7 @@
 
 #include "sdm636.dtsi"
 #include "sdm636-mtp.dtsi"
-#include "sdm660-external-codec.dtsi"
+#include "sdm660-internal-codec.dtsi"  //nubia modify
 
 / {
 	model = "Qualcomm Technologies, Inc. SDM 636 PM660 + PM660L MTP";

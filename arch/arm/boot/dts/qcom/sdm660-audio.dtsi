@@ -15,7 +15,7 @@
 #include "sdm660-lpi.dtsi"
 
 &slim_aud {
-	status = "okay";
+	status = "disable";  //nubia modify
 	dai_slim: msm_dai_slim {
 		compatible = "qcom,msm-dai-slim";
 		elemental-addr = [ff ff ff fe 17 02];
@@ -113,7 +113,7 @@
 
 &pm660l_3 {
 	pmic_analog_codec: analog-codec@f000 {
-		status = "disabled";
+		status = "okay";  //nubia modify
 		compatible = "qcom,pmic-analog-codec";
 		reg = <0xf000 0x200>;
 		#address-cells = <2>;
@@ -167,6 +167,7 @@
 					   "cdc-vdd-pa";
 
 		qcom,cdc-on-demand-supplies = "cdc-vdd-mic-bias";
+               qcom,cdc-micbias-cfilt-mv = <2500000>;  //nubia modify 
 
 		/*
 		 * Not marking address @ as driver searches this child
@@ -181,6 +182,7 @@
 
 &soc {
 	cdc_pdm_gpios: cdc_pdm_pinctrl {
+		status = "okay";  //nubia modify
 		compatible = "qcom,msm-cdc-pinctrl";
 		pinctrl-names = "aud_active", "aud_sleep";
 		pinctrl-0 = <&cdc_pdm_gpios_active &cdc_pdm_2_gpios_active>;
@@ -189,6 +191,7 @@
 	};
 
 	cdc_comp_gpios: cdc_comp_pinctrl {
+		status = "okay";  //nubia modify
 		compatible = "qcom,msm-cdc-pinctrl";
 		pinctrl-names = "aud_active", "aud_sleep";
 		pinctrl-0 = <&cdc_comp_gpios_active>;
@@ -215,16 +218,16 @@
 
 	wsa_spkr_en1: wsa_spkr_en1_pinctrl {
 	      compatible = "qcom,msm-cdc-pinctrl";
-	      pinctrl-names = "aud_active", "aud_sleep";
-	      pinctrl-0 = <&spkr_1_sd_n_active>;
-	      pinctrl-1 = <&spkr_1_sd_n_sleep>;
+	      //pinctrl-names = "aud_active", "aud_sleep";
+	      //pinctrl-0 = <&spkr_1_sd_n_active>;
+	      //pinctrl-1 = <&spkr_1_sd_n_sleep>;
 	};
 
 	wsa_spkr_en2: wsa_spkr_en2_pinctrl {
 	      compatible = "qcom,msm-cdc-pinctrl";
-	      pinctrl-names = "aud_active", "aud_sleep";
-	      pinctrl-0 = <&spkr_2_sd_n_active>;
-	      pinctrl-1 = <&spkr_2_sd_n_sleep>;
+	      //pinctrl-names = "aud_active", "aud_sleep";
+	      //pinctrl-0 = <&spkr_2_sd_n_active>;
+	      //pinctrl-1 = <&spkr_2_sd_n_sleep>;
 	};
 
 	msm_sdw_codec: msm-sdw-codec@152c1000 {

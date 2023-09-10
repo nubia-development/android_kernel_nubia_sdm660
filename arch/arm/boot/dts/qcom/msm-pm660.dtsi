@@ -50,6 +50,10 @@
 				qcom,pon-type = <0>;
 				qcom,pull-up = <1>;
 				linux,code = <116>;
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <10256>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <7>;
 			};
 
 			qcom,pon_2 {
@@ -165,7 +169,7 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			qcom,qpnp-rtc-write = <0>;
-			qcom,qpnp-rtc-alarm-pwrup = <0>;
+			qcom,qpnp-rtc-alarm-pwrup = <1>;
 
 			qcom,pm660_rtc_rw@6000 {
 				reg = <0x6000 0x100>;
@@ -332,6 +336,19 @@
 
 			qcom,wipower-max-uw = <5000000>;
 			dpdm-supply = <&qusb_phy0>;
+
+			//NUBIA ADDED BEGIN
+			qcom,hvdcp-disable;
+			qcom,bat-temp-limit-support;
+			qcom,bat-temp-limit-current = <1000000>;
+			qcom,bat-temp-jeita-current = <250000>;
+			qcom,bat-temp-limit-threshold = <400>;
+			qcom,bat-temp-limit-voltage = <4100>;
+
+			qcom,fcc-max-ua = <2300000>;
+			qcom,fv-max-uv = <4400000>;
+			qcom,usb-icl-ua = <2000000>;
+			//NUBIA ADDED ENG
 
 			qcom,thermal-mitigation
 					= <3000000 2500000 2000000 1500000
@@ -555,6 +572,20 @@
 			qcom,fg-esr-timer-asleep = <256 256>;
 			qcom,fg-esr-timer-charging = <0 96>;
 			qcom,cycle-counter-en;
+
+			//NUBIA ADDED BEGIN
+			qcom,fg-recharge-soc-thr = <99>;
+			qcom,fg-recharge-voltage = <4340>;
+			qcom,battery-thermal-coefficients = [cc 50 ff];
+			qcom,fg-jeita-thresholds = <0 10 44 50>;
+			qcom,fg-jeita-hyst-temp = <2>;
+			qcom,fg-chg-term-current = <200>;
+			qcom,fg-sys-term-current = <(-250)>;
+			qcom,fg-force-load-profile;
+			qcom,hold-soc-while-full;
+			nubia,use-default-batt-id = <15>;
+			//NUBIA ADDED END
+
 			status = "okay";
 
 			qcom,fg-batt-soc@4000 {
@@ -621,6 +652,19 @@
 			qcom,vbat-polling-delay-ms = <100>;
 			qcom,ibat-polling-delay-ms = <100>;
 		};
+
+		//NUBIA ADDED BEGIN
+		neo,battery {
+			compatible = "nubia,neo-battery";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			reg = <0x1000 0x700>;
+			neo,batt-capacity-uah = <3100000>;
+			neo,batt-cutoff-mv = <3450>;
+			neo,batt-soc-increase-per-sec = <10>;
+			neo,batt-soc-decrease-per-sec = <60>;
+		};
+		//NUBIA ADDED END
 	};
 
 	qcom,pm660@1 {
@@ -638,20 +682,19 @@
 			qcom,pmic-revid = <&pm660_revid>;
 			qcom,pmic-misc = <&pm660_misc>;
 			qcom,misc-clk-trim-error-reg = <0xf3>;
-			qcom,actuator-type = "lra";
+			qcom,actuator-type = "erm";
 			qcom,play-mode = "direct";
-			qcom,vmax-mv = <3200>;
+			qcom,vmax-mv = <2700>;
 			qcom,ilim-ma = <800>;
 			qcom,wave-shape = "square";
-			qcom,wave-play-rate-us = <6667>;
-			qcom,int-pwm-freq-khz = <505>;
-			qcom,sc-deb-cycles = <8>;
+			//qcom,wave-play-rate-us = <6667>;
+                        qcom,wave-play-rate-us = <4286>;
+                        //qcom,int-pwm-freq-khz = <505>;
+			qcom,int-pwm-freq-khz = <500>;
+			qcom,sc-deb-cycles = <32>;
 			qcom,en-brake;
 			qcom,brake-pattern = [03 03 00 00];
-			qcom,lra-high-z = "opt0";
-			qcom,lra-auto-res-mode = "qwd";
-			qcom,lra-calibrate-at-eop = <0>;
-			qcom,correct-lra-drive-freq;
+                        qcom,ztemt_vibrator_ms = <60>;
 		};
 	};
 };

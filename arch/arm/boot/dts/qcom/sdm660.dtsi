@@ -307,9 +307,17 @@
 					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,slotselect";
+					fsmgr_flags = "wait";
 					status = "ok";
 				};
+                                system {
+                                        compatible = "android,vendor";
+                                        dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/system";
+                                        type = "ext4";
+                                        mnt_flags = "ro,barrier=1,discard";
+                                        fsmgr_flags = "wait";
+                                        status = "ok";
+                                };
 			};
 		};
 	};
@@ -406,6 +414,11 @@
 		cont_splash_mem: splash_region@9d400000 {
 			reg = <0x0 0x9d400000 0x0 0x02400000>;
 			label = "cont_splash_mem";
+		};
+
+		pstore_reserve_mem: pstore_reserve_mem_region@97100000 {
+			reg = <0x0 0x97100000 0x0 0x00100000>;
+			label = "pstore_reserve_mem";
 		};
 	};
 
@@ -609,8 +622,8 @@
 		reg = <0x17817000 0x1000>;
 		reg-names = "wdt-base";
 		interrupts = <0 3 0>, <0 4 0>;
-		qcom,bark-time = <11000>;
-		qcom,pet-time = <10000>;
+		qcom,bark-time = <25000>;
+		qcom,pet-time = <15000>;
 		qcom,ipi-ping;
 		qcom,wakeup-enable;
 		qcom,scandump-size = <0x40000>;
@@ -679,7 +692,7 @@
 			<&clock_gcc GCC_BLSP1_AHB_CLK>;
 		clock-frequency = <15000000>;
 		qcom,ipc-gpio = <&tlmm 72 0>;
-		qcom,finger-detect-gpio = <&pm660_gpios 11 0>;
+//		qcom,finger-detect-gpio = <&pm660_gpios 11 0>;
 	};
 
 	qcom,sensor-information {
@@ -875,7 +888,7 @@
 			qcom,high-threshold-uamp = <4200000>;
 			qcom,vph-high-threshold-uv = <3500000>;
 			qcom,vph-low-threshold-uv = <3300000>;
-			qcom,soc-low-threshold = <10>;
+			qcom,soc-low-threshold = <5>;
 		};
 	};
 
@@ -1254,11 +1267,10 @@
 		compatible = "qcom,clk-cpu-osm";
 		reg = <0x179c0000 0x4000>, <0x17916000 0x1000>,
 		      <0x17816000 0x1000>, <0x179d1000 0x1000>,
-		      <0x00784130 0x8>, <0x00784130 0x8>,
-		      <0x17914800 0x800>;
+		      <0x00784130 0x8>, <0x00784130 0x8>;
 		reg-names = "osm", "pwrcl_pll", "perfcl_pll",
 			    "apcs_common", "pwrcl_efuse",
-			    "perfcl_efuse", "pwrcl_acd";
+			    "perfcl_efuse";
 
 		qcom,acdtd-val = <0x0000a111 0x0000a111>;
 		qcom,acdcr-val = <0x002c5ffd 0x002c5ffd>;
@@ -2654,6 +2666,14 @@
 			debounce-interval = <15>;
 		};
 
+		voice_key {
+			label = "voice_key";
+			gpios = <&tlmm 54 0x1>;
+			linux,input-type = <1>;
+			linux,code = <216>;
+			debounce-interval = <15>;
+		};
+
 		vol_up {
 			label = "volume_up";
 			gpios = <&pm660l_gpios 7 0x1>;
@@ -2663,6 +2683,34 @@
 			debounce-interval = <15>;
 		};
 	};
+	
+	keyreset {
+		compatible = "nubia,keyreset";
+		keys-down = <0x73 0x72>;
+		keys-up = <0x73 0x72>;
+		keyreset-need-panic;
+		key_down_delay = <20>;
+	};
+
+	//nubia add hw version
+	nubia_hw_ver_gpio: nubia_hw_gpio_ctrl {
+		compatible = "qcom,nubia_hw-gpio-ctrl";
+		qcom,pcb-gpio1 = <&tlmm 61 0>;
+		qcom,pcb-gpio2 = <&tlmm 62 0>;
+		qcom,rf-gpio1 = <&tlmm  26 0>;
+		qcom,rf-gpio2 = <&tlmm 27 0>;
+		//qcom,config-gpio1 = <&tlmm 59 0>;
+		//qcom,config-gpio2 = <&tlmm 60 0>;
+		//qcom,pm-gpio1 = <&pm8998_gpios 12 0>;
+		//qcom,pm-gpio2 = <&pm8998_gpios 12 0>;
+		//qcom,pcb-pm-adc_channel = <0x38>;
+		//qcom,config-pm-adc_channel = <0x51>;//powerup 100k
+		//qcom,nubia_hw-vadc = <&pm8998_vadc>;
+		pinctrl-names = "pull_up_default","pull_down_default";
+		pinctrl-0 = <&nubia_gpio_default>;
+		pinctrl-1 = <&nubia_gpio_pulldown>;
+	};
+
 };
 
 &blsp2_uart1_hs {

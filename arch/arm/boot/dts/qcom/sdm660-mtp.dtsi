@@ -15,8 +15,7 @@
 / {
 	mtp_batterydata: qcom,battery-data {
 		qcom,batt-id-range-pct = <15>;
-		#include "fg-gen3-batterydata-itech-3000mah.dtsi"
-		#include "fg-gen3-batterydata-ascent-3450mah.dtsi"
+		#include "fg-gen3-batterydata-atl-3450mah.dtsi"
 	};
 };
 
@@ -216,7 +215,7 @@
 
 	status = "ok";
 };
-
+/*
 &sdhc_2 {
 	/* device core power supply */
 	vdd-supply = <&pm660l_l5>;
@@ -249,7 +248,7 @@
 
 	status = "ok";
 };
-
+*/
 &soc {
 	qcom,msm-ssc-sensors {
 		compatible = "qcom,msm-ssc-sensors";
@@ -265,11 +264,11 @@
 };
 
 &i2c_2 {
-	status = "ok";
+	status = "disabled";
 	smb1351-charger@1d {
 		compatible = "qcom,smb1351-charger";
 		reg = <0x1d>;
-		qcom,parallel-charger;
+		//qcom,parallel-charger;
 		qcom,float-voltage-mv = <4400>;
 		qcom,recharge-mv = <100>;
 		qcom,parallel-en-pin-polarity = <1>;

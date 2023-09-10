@@ -369,7 +369,7 @@
 
 		home {
 			label = "home";
-			gpios = <&pm660_gpios 11 0x1>;
+//			gpios = <&pm660_gpios 11 0x1>;
 			linux,input-type = <1>;
 			linux,code = <102>;
 			gpio-key,wakeup;

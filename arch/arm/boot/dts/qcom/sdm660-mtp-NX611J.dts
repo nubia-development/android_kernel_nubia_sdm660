@@ -15,7 +15,7 @@
 
 #include "sdm660.dtsi"
 #include "sdm660-mtp.dtsi"
-#include "sdm660-internal-codec.dtsi" //nubia modify
+#include "sdm660-internal-codec.dtsi"  //nubia modify
 
 / {
 	model = "Qualcomm Technologies, Inc. SDM 660 PM660 + PM660L MTP";
@@ -37,3 +37,5 @@
 	/delete-node/sound-9335;
 };
 
+
+#include NUBIA_OVERWRITE_DTSI_FILE
