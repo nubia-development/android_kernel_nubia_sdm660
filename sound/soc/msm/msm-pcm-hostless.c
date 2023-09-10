@@ -14,11 +14,15 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/of_device.h>
-#include <linux/workqueue.h>
-#include <linux/delay.h>
 #include <sound/core.h>
 #include <sound/soc.h>
 #include <sound/pcm.h>
+/*add by wanggaodeng patch */
+#define AUDIO_MSM_ADSP_PATCH 1
+
+#ifdef AUDIO_MSM_ADSP_PATCH
+#include <linux/workqueue.h>
+#include <linux/delay.h>
 #include <linux/qdsp6v2/apr.h>
 
 struct hostless_pdata {
@@ -93,6 +97,7 @@ fail_pdev_add:
 err:
 	return;
 }
+#endif
 
 static int msm_pcm_hostless_prepare(struct snd_pcm_substream *substream)
 {
@@ -116,16 +121,20 @@ static struct snd_soc_platform_driver msm_soc_hostless_platform = {
 
 static int msm_pcm_hostless_probe(struct platform_device *pdev)
 {
+#ifdef AUDIO_MSM_ADSP_PATCH
 	struct hostless_pdata *pdata;
 
 	pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata)
 		return -ENOMEM;
+#endif
 	pr_debug("%s: dev name %s\n", __func__, dev_name(&pdev->dev));
+#ifdef AUDIO_MSM_ADSP_PATCH
 	pdata->dev = &pdev->dev;
 	INIT_WORK(&pdata->msm_test_add_child_dev_work,
 		  msm_test_add_child_dev);
 	schedule_work(&pdata->msm_test_add_child_dev_work);
+#endif
 	return snd_soc_register_platform(&pdev->dev,
 				   &msm_soc_hostless_platform);
 }
