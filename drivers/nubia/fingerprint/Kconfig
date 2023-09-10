@@ -1,7 +1,7 @@
 
 menu "nubia fingerprint driver"
 
-config NUBIA_SUNWAVE_FINGERPRINT
+config NUBIA_SUNWAVE_FP
         bool "config nubia fingerprint sunwave"
         default n
         help
