@@ -379,6 +379,9 @@ done:
  *  FCC  *
 **********/
 #define EFFICIENCY_PCT	80
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+#define MIN_SPLIT_CHANGE_CURRENT_UA		300000
+#endif
 static void split_fcc(struct pl_data *chip, int total_ua,
 			int *master_ua, int *slave_ua)
 {
@@ -424,10 +427,18 @@ static void split_fcc(struct pl_data *chip, int total_ua,
 	 * charger's current goes through main charger's BATFET, keep
 	 * the main charger's FCC to the votable result.
 	 */
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	*slave_ua = min(*slave_ua, total_ua - MIN_SPLIT_CHANGE_CURRENT_UA);
+	if (chip->pl_mode == POWER_SUPPLY_PL_USBIN_USBIN)
+		*master_ua = max(MIN_SPLIT_CHANGE_CURRENT_UA, total_ua);
+	else
+		*master_ua = max(MIN_SPLIT_CHANGE_CURRENT_UA, total_ua - *slave_ua);
+#else
 	if (chip->pl_mode == POWER_SUPPLY_PL_USBIN_USBIN)
 		*master_ua = max(0, total_ua);
 	else
 		*master_ua = max(0, total_ua - *slave_ua);
+#endif
 }
 
 static int pl_fcc_vote_callback(struct votable *votable, void *data,

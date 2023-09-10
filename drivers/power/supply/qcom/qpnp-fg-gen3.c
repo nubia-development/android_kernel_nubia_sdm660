@@ -916,6 +916,9 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 	struct device_node *batt_node, *profile_node;
 	const char *data;
 	int rc, len;
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	int temp=0;
+#endif
 
 	batt_node = of_find_node_by_name(node, "qcom,battery-data");
 	if (!batt_node) {
@@ -925,6 +928,19 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 
 	profile_node = of_batterydata_get_best_profile(batt_node,
 				chip->batt_id_ohms / 1000, NULL);
+
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	if (IS_ERR(profile_node) ||!profile_node){
+		rc = of_property_read_u32(node, "nubia,use-default-batt-id", &temp);
+		if(rc < 0)
+			pr_err("get use-default-batt-id error\n");
+
+		pr_err("couldn't find profile handle,use nubia default batt id =%d\n",temp);
+		profile_node = of_batterydata_get_best_profile(batt_node,
+				temp, NULL);
+	}
+#endif
+
 	if (IS_ERR(profile_node))
 		return PTR_ERR(profile_node);
 
@@ -2748,6 +2764,17 @@ done:
 	batt_psy_initialized(chip);
 	fg_notify_charger(chip);
 	chip->profile_loaded = true;
+
+#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
+	chip->soc_monitor_work_votable = find_votable("SOC_MONITOR");
+	if (chip->soc_monitor_work_votable == NULL) {
+		pr_err("NEO: can't find SOC_MONITOR votable\n");
+	} 
+	else {
+		vote(chip->soc_monitor_work_votable, "FG_PROFILE_VOTER", true, 0);
+	}
+#endif
+
 	fg_dbg(chip, FG_STATUS, "profile loaded successfully");
 out:
 	chip->soc_reporting_ready = true;
