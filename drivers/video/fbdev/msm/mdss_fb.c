@@ -47,6 +47,10 @@
 #include "mdss_mdp.h"
 #include "mdss_sync.h"
 
+#ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
+#include "../../nubia/display/nubia_disp_preference.h"
+#endif
+
 #include "mdss_livedisplay.h"
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
@@ -266,7 +270,9 @@ static int mdss_fb_notify_update(struct msm_fb_data_type *mfd,
 }
 
 static int lcd_backlight_registered;
-
+#ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
+static struct led_classdev backlight_led;
+#endif
 static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 				      enum led_brightness value)
 {
@@ -278,6 +284,9 @@ static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 		mfd->boot_notification_led = NULL;
 	}
 
+#ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
+	bl_lvl = nubia_backlight_covert(mfd,value,backlight_led.max_brightness);
+#else
 	if (value > mfd->panel_info->brightness_max)
 		value = mfd->panel_info->brightness_max;
 
@@ -286,6 +295,7 @@ static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 	 */
 	MDSS_BRIGHT_TO_BL(bl_lvl, value, mfd->panel_info->bl_max,
 				mfd->panel_info->brightness_max);
+#endif
 
 	if (!bl_lvl && value)
 		bl_lvl = 1;
@@ -299,6 +309,8 @@ static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 	mfd->bl_level_usr = bl_lvl;
 }
 
+#ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
+#else
 static enum led_brightness mdss_fb_get_bl_brightness(
 	struct led_classdev *led_cdev)
 {
@@ -310,12 +322,16 @@ static enum led_brightness mdss_fb_get_bl_brightness(
 
 	return value;
 }
+#endif
 
 static struct led_classdev backlight_led = {
 	.name           = "lcd-backlight",
 	.brightness     = MDSS_MAX_BL_BRIGHTNESS / 2,
 	.brightness_set = mdss_fb_set_bl_brightness,
+#ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
+#else
 	.brightness_get = mdss_fb_get_bl_brightness,
+#endif
 	.max_brightness = MDSS_MAX_BL_BRIGHTNESS,
 };
 
@@ -1311,8 +1327,12 @@ static int mdss_fb_probe(struct platform_device *pdev)
 
 	mfd->ext_ad_ctrl = -1;
 	if (mfd->panel_info && mfd->panel_info->brightness_max > 0)
+#ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
+		mfd->bl_level = nubia_backlight_covert(mfd,backlight_led.brightness, backlight_led.max_brightness);
+#else
 		MDSS_BRIGHT_TO_BL(mfd->bl_level, backlight_led.brightness,
 		mfd->panel_info->bl_max, mfd->panel_info->brightness_max);
+#endif
 	else
 		mfd->bl_level = 0;
 
@@ -1745,6 +1765,11 @@ static void mdss_fb_scale_bl(struct msm_fb_data_type *mfd, u32 *bl_lvl)
 	(*bl_lvl) = temp;
 }
 
+//ZTEMT: added by nubia camera for front camera flash  start
+struct msm_fb_data_type *zte_camera_mfd;
+extern int camera_lcd_bkl_handle(void);
+//ZTEMT: added by nubia camera for front camera flash end
+
 /* must call this function from within mfd->bl_lock */
 void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 {
@@ -1763,6 +1788,7 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 	} else {
 		mfd->unset_bl_level = U32_MAX;
 	}
+	zte_camera_mfd = mfd; //ZTEMT: added by nubia camera for front camera flash
 
 	pdata = dev_get_platdata(&mfd->pdev->dev);
 
@@ -1786,7 +1812,10 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 			if (mfd->bl_level != bkl_lvl)
 				bl_notify_needed = true;
 			pr_debug("backlight sent to panel :%d\n", temp);
-			pdata->set_backlight(pdata, temp);
+			if(!camera_lcd_bkl_handle() || (0 == temp)) //ZTEMT: added by nubia camera for front camera flash
+			{
+			    pdata->set_backlight(pdata, temp);
+			}
 			mfd->bl_level = bkl_lvl;
 			mfd->bl_level_scaled = temp;
 		}
@@ -1823,6 +1852,7 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
 			pdata->set_backlight(pdata, temp);
 			mfd->bl_level_scaled = mfd->unset_bl_level;
 			mfd->allow_bl_update = true;
+			zte_camera_mfd = mfd; //ZTEMT: added by nubia camera for front camera flash
 		}
 	}
 	mutex_unlock(&mfd->bl_lock);
@@ -1953,7 +1983,9 @@ static int mdss_fb_blank_unblank(struct msm_fb_data_type *mfd)
 
 	if (!mfd)
 		return -EINVAL;
-
+#ifdef CONFIG_NUBIA_TP_HIMAX_ESD_CHECK
+	get_mfd(mfd);
+#endif
 	if (mfd->panel_info->debugfs_info)
 		mdss_panel_validate_debugfs_info(mfd);
 
