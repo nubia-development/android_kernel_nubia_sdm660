@@ -1186,6 +1186,7 @@ static int32_t msm_actuator_set_position(
 	uint16_t next_lens_position;
 	uint16_t delay;
 	uint32_t hw_params = 0;
+	int step_boundary  = 0;//jixd add for reset optimize
 	struct msm_camera_i2c_reg_setting reg_setting;
 	CDBG("%s Enter %d\n", __func__, __LINE__);
 	if (set_pos->number_of_steps <= 0 ||
@@ -1209,8 +1210,24 @@ static int32_t msm_actuator_set_position(
 
 	a_ctrl->i2c_tbl_index = 0;
 	hw_params = set_pos->hw_params;
+	step_boundary = a_ctrl->region_params[0].step_bound[MOVE_NEAR];//jixd add for reset optimize
 	for (index = 0; index < set_pos->number_of_steps; index++) {
-		next_lens_position = set_pos->pos[index];
+		//jixd add for reset optimize ---start
+		if(set_pos->use_dac_value)
+		{
+			next_lens_position = set_pos->pos[index];
+		}
+		else
+		{
+			if(set_pos->pos[index] < 0 || (set_pos->pos[index] > step_boundary -1))
+			{
+				break;
+			}
+			next_lens_position = a_ctrl->step_position_table[set_pos->pos[index]];
+
+		}
+		//jixd add for reset optimize ---end
+
 		delay = set_pos->delay[index];
 		a_ctrl->func_tbl->actuator_parse_i2c_params(a_ctrl,
 			next_lens_position, hw_params, delay);
@@ -1228,6 +1245,7 @@ static int32_t msm_actuator_set_position(
 			return rc;
 		}
 		a_ctrl->i2c_tbl_index = 0;
+		set_pos->dac_output = next_lens_position;//jixd add for reset optimize
 	}
 	CDBG("%s exit %d\n", __func__, __LINE__);
 	return rc;
@@ -1747,10 +1765,12 @@ static long msm_actuator_subdev_do_ioctl(
 			parg = &actuator_data;
 			break;
 		}
+	/* ZTEMT: li.bin1 add for delete the code
 		break;
 	case VIDIOC_MSM_ACTUATOR_CFG:
 		pr_err("%s: invalid cmd 0x%x received\n", __func__, cmd);
 		return -EINVAL;
+	*/
 	}
 
 	rc = msm_actuator_subdev_ioctl(sd, cmd, parg);
