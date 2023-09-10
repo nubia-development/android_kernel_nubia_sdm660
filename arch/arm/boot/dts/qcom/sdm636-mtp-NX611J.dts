@@ -13,8 +13,8 @@
 
 /dts-v1/;
 
-#include "../nubia/NX611J/sdm636.dtsi"
-#include "../nubia/NX611J/sdm636-mtp.dtsi"
+#include "nubia_nx611j/sdm636.dtsi"
+#include "nubia_nx611j/sdm636-mtp.dtsi"
 #include "sdm660-internal-codec.dtsi"  //nubia modify
 
 / {

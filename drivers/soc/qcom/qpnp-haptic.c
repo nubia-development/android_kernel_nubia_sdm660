@@ -2246,28 +2246,19 @@ static int qpnp_hap_auto_mode_config(struct qpnp_hap *hap, int time_ms)
 	return 0;
 }
 
-static void qpnp_timed_enable_worker(struct work_struct *work)
+/* enable interface from timed output class */
+static void qpnp_hap_td_enable(struct timed_output_dev *dev, int time_ms)
 {
-	struct qpnp_hap *hap = container_of(work, struct qpnp_hap,
-					 td_work);
-	bool state;
-	ktime_t rem;
+	struct qpnp_hap *hap = container_of(dev, struct qpnp_hap,
+					 timed_dev);
 	int rc;
-	int time_ms;
-
-	spin_lock(&hap->td_lock);
-	time_ms = hap->td_time_ms;
-	spin_unlock(&hap->td_lock);
-
-	state = !!time_ms;
 
 	if (time_ms < 0)
 		return;
 
 	mutex_lock(&hap->lock);
     hap_info("first set time, time_ms:%d lasttime_ms:%d\n", time_ms,hap->ztemt_last_play_time_ms );
-	if (hap->state == state) {
-		if (state) {
+	if (time_ms == 0) {
 /*1. add code for App set timer is disable vibator; but kernel drivers timerout is not happen
     2.  if set time_ms is >  ztemt_vibrator_ms, then App disable HAPTIC  ; 
     3.  else if set time_ms is < ztemt_vibrator_ms then kernel driver disable HAPITC time_ms <40ms ,
@@ -2282,37 +2273,30 @@ static void qpnp_timed_enable_worker(struct work_struct *work)
 		queue_work(system_unbound_wq, &hap->work);
 #else
 	    /* disable haptics */
-			if (time_ms > ktime_to_ms(rem)) {
-				time_ms = (time_ms > hap->timeout_ms ?
-						 hap->timeout_ms : time_ms);
-				hrtimer_cancel(&hap->hap_timer);
-				hap->play_time_ms = time_ms;
-				hrtimer_start(&hap->hap_timer,
-						ktime_set(time_ms / 1000,
-						(time_ms % 1000) * 1000000),
-						HRTIMER_MODE_REL);
-			}
+		hrtimer_cancel(&hap->hap_timer);
+		hap->state = 0;
+		schedule_work(&hap->work);
 #endif
-		}
 		mutex_unlock(&hap->lock);
 		return;
 	}
 
-	hap->state = state;
-	if (!hap->state) {
-		hrtimer_cancel(&hap->hap_timer);
-	} else {
-		if (time_ms < 10)
-			time_ms = 10;
+	if (time_ms < 10)
+		time_ms = 10;
 
-		if (hap->auto_mode) {
-			rc = qpnp_hap_auto_mode_config(hap, time_ms);
-			if (rc < 0) {
-				pr_err("Unable to do auto mode config\n");
-				mutex_unlock(&hap->lock);
-				return;
-			}
+	if (is_sw_lra_auto_resonance_control(hap))
+		hrtimer_cancel(&hap->auto_res_err_poll_timer);
+
+	hrtimer_cancel(&hap->hap_timer);
+
+	if (hap->auto_mode) {
+		rc = qpnp_hap_auto_mode_config(hap, time_ms);
+		if (rc < 0) {
+			pr_err("Unable to do auto mode config\n");
+			mutex_unlock(&hap->lock);
+			return;
 		}
+	}
 #ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
 	if(time_ms < hap->ztemt_vibrator_ms)
 	{
@@ -2320,34 +2304,19 @@ static void qpnp_timed_enable_worker(struct work_struct *work)
 	}
 	hap->ztemt_last_play_time_ms = time_ms;
 #endif
-		time_ms = (time_ms > hap->timeout_ms ?
-				 hap->timeout_ms : time_ms);
-		hap->play_time_ms = time_ms;
-		hrtimer_start(&hap->hap_timer,
-				ktime_set(time_ms / 1000,
-				(time_ms % 1000) * 1000000),
-				HRTIMER_MODE_REL);
+	time_ms = (time_ms > hap->timeout_ms ? hap->timeout_ms : time_ms);
+	hap->play_time_ms = time_ms;
+	hap->state = 1;
+	hrtimer_start(&hap->hap_timer,
+		ktime_set(time_ms / 1000, (time_ms % 1000) * 1000000),
+		HRTIMER_MODE_REL);
 	hap_info("start hrtimer, time=%d\n", hap->play_time_ms);
-	}
-
 	mutex_unlock(&hap->lock);
 #ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
 	queue_work(system_unbound_wq, &hap->work);
 #else
 	schedule_work(&hap->work);
-}
 #endif
-/* enable interface from timed output class */
-static void qpnp_hap_td_enable(struct timed_output_dev *dev, int time_ms)
-{
-	struct qpnp_hap *hap = container_of(dev, struct qpnp_hap,
-					 timed_dev);
-
-	spin_lock(&hap->td_lock);
-	hap->td_time_ms = time_ms;
-	spin_unlock(&hap->td_lock);
-
-	schedule_work(&hap->td_work);
 }
 
 /* play pwm bytes */
@@ -2921,25 +2890,7 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 
 	hap_info("nubia hap->play_mode:%d [%s] ",hap->play_mode,temp_str);
 
-	hap->vtg_min = QPNP_HAP_VMAX_MIN_MV;
-	rc = of_property_read_u32(pdev->dev.of_node, "qcom,vtg-min", &temp);
-	if (!rc) {
-		hap->vtg_min = temp;
-	} else if (rc != -EINVAL) {
-		pr_err("Unable to read vtg_min\n");
-		return rc;
-	}
-
-	hap->vtg_max = QPNP_HAP_VMAX_MAX_MV;
-	rc = of_property_read_u32(pdev->dev.of_node, "qcom,vtg-max", &temp);
-	if (!rc) {
-		hap->vtg_max = temp;
-	} else if (rc != -EINVAL) {
-		pr_err("Unable to read vtg_max\n");
-		return rc;
-	}
-
-	hap->vmax_mv = hap->vtg_max;
+	hap->vmax_mv = QPNP_HAP_VMAX_MAX_MV;
 	rc = of_property_read_u32(pdev->dev.of_node, "qcom,vmax-mv", &temp);
 	if (!rc) {
 		hap->vmax_mv = temp;
@@ -2947,14 +2898,6 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		pr_err("Unable to read vmax\n");
 		return rc;
 	}
-
-	if (hap->vmax_mv < hap->vtg_min) {
-		hap->vmax_mv = hap->vtg_min;
-	} else if (hap->vmax_mv > hap->vtg_max) {
-		hap->vmax_mv = hap->vtg_max;
-	}
-
-	hap->vtg_default = hap->vmax_mv;
 
 	hap_info("nubia hap->vmax_mv:%d  ",hap->vmax_mv);
 
@@ -3143,7 +3086,6 @@ static int qpnp_haptic_probe(struct platform_device *pdev)
 	INIT_WORK(&hap->work, qpnp_hap_worker);
 	INIT_DELAYED_WORK(&hap->sc_work, qpnp_handle_sc_irq);
 	init_completion(&hap->completion);
-	INIT_WORK(&hap->td_work, qpnp_timed_enable_worker);
 
 	hrtimer_init(&hap->hap_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	hap->hap_timer.function = qpnp_hap_timer;

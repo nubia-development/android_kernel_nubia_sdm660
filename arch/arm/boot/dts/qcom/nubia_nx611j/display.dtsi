@@ -2,7 +2,7 @@
   *    add nubia display
   */
 
-#include "../nubia_panel/nubia_panel.dtsi"
+#include "panel.dtsi"
 
 &mdss_dsi {
 	hw-config = "single_dsi";
