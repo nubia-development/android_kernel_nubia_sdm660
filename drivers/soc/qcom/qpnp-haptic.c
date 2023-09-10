@@ -33,6 +33,20 @@
 #include <linux/qpnp/qpnp-revid.h>
 #include "../../staging/android/timed_output.h"
 
+/* #define DEBUG_HAPTIC */
+#define QPNP_HAPTIC_MIN_START_TIME  100
+
+#ifdef DEBUG_HAPTIC
+#define hap_info(fmt, args...)  pr_info("%d "  fmt,__LINE__, ##args)
+#define hap_err(fmt, args...)  pr_err("%d "  fmt,__LINE__, ##args)
+#define hap_warn(fmt, args...)  pr_warn("%d "  fmt,__LINE__, ##args)
+#else
+#define hap_info(fmt, args...)
+#define hap_err(fmt, args...)
+#define hap_warn(fmt, args...)
+
+#endif
+
 #define QPNP_HAP_STATUS(b)		(b + 0x0A)
 #define QPNP_HAP_LRA_AUTO_RES_LO(b)	(b + 0x0B)
 #define QPNP_HAP_LRA_AUTO_RES_HI(b)     (b + 0x0C)
@@ -402,6 +416,12 @@ struct qpnp_hap {
 	bool				auto_mode;
 	bool				override_auto_mode_config;
 	bool				play_irq_en;
+
+#ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
+	u32 ztemt_vibrator_ms;
+	u32 ztemt_last_play_time_ms;
+#endif
+
 };
 
 static struct qpnp_hap *ghap;
@@ -2237,12 +2257,26 @@ static void qpnp_hap_td_enable(struct timed_output_dev *dev, int time_ms)
 		return;
 
 	mutex_lock(&hap->lock);
-
+    hap_info("first set time, time_ms:%d lasttime_ms:%d\n", time_ms,hap->ztemt_last_play_time_ms );
 	if (time_ms == 0) {
-		/* disable haptics */
+/*1. add code for App set timer is disable vibator; but kernel drivers timerout is not happen
+    2.  if set time_ms is >  ztemt_vibrator_ms, then App disable HAPTIC  ; 
+    3.  else if set time_ms is < ztemt_vibrator_ms then kernel driver disable HAPITC time_ms <40ms ,
+*/
+#ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
+		if(hap->ztemt_last_play_time_ms > QPNP_HAPTIC_MIN_START_TIME)
+		{
+			hrtimer_cancel(&hap->hap_timer);
+			hap->state = 0;	
+		}
+		hap->ztemt_last_play_time_ms =0;
+		queue_work(system_unbound_wq, &hap->work);
+#else
+	    /* disable haptics */
 		hrtimer_cancel(&hap->hap_timer);
 		hap->state = 0;
 		schedule_work(&hap->work);
+#endif
 		mutex_unlock(&hap->lock);
 		return;
 	}
@@ -2263,15 +2297,26 @@ static void qpnp_hap_td_enable(struct timed_output_dev *dev, int time_ms)
 			return;
 		}
 	}
-
+#ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
+	if(time_ms < hap->ztemt_vibrator_ms)
+	{
+		time_ms = time_ms + hap->ztemt_vibrator_ms;
+	}
+	hap->ztemt_last_play_time_ms = time_ms;
+#endif
 	time_ms = (time_ms > hap->timeout_ms ? hap->timeout_ms : time_ms);
 	hap->play_time_ms = time_ms;
 	hap->state = 1;
 	hrtimer_start(&hap->hap_timer,
 		ktime_set(time_ms / 1000, (time_ms % 1000) * 1000000),
 		HRTIMER_MODE_REL);
+	hap_info("start hrtimer, time=%d\n", hap->play_time_ms);
 	mutex_unlock(&hap->lock);
+#ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
+	queue_work(system_unbound_wq, &hap->work);
+#else
 	schedule_work(&hap->work);
+#endif
 }
 
 /* play pwm bytes */
@@ -2396,8 +2441,14 @@ static enum hrtimer_restart qpnp_hap_timer(struct hrtimer *timer)
 							 hap_timer);
 
 	hap->state = 0;
-	schedule_work(&hap->work);
 
+#ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
+    hap->ztemt_last_play_time_ms =0;
+    hap_info("time out :%d,%d",hap->play_time_ms,hap->ztemt_last_play_time_ms);
+	queue_work(system_unbound_wq, &hap->work);
+#else
+	schedule_work(&hap->work);
+#endif
 	return HRTIMER_NORESTART;
 }
 
@@ -2662,7 +2713,20 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		pr_err("Unable to read timeout\n");
 		return rc;
 	}
+	hap_info("nubia hap->timeout_ms:%d ",hap->timeout_ms);
 
+#ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
+	hap->ztemt_vibrator_ms=0;
+	rc = of_property_read_u32(pdev->dev.of_node,
+			"qcom,ztemt_vibrator_ms", &temp);
+	if (!rc) {
+		hap->ztemt_vibrator_ms = temp;
+	} else if (rc != -EINVAL) {
+		dev_err(&pdev->dev, "Unable to read ztemt_vibrator_ms\n");
+		return rc;
+	}
+	hap_info("nubia hap->ztemt_vibrator_ms:%d ",hap->ztemt_vibrator_ms);
+#endif
 	hap->act_type = QPNP_HAP_LRA;
 	rc = of_property_read_string(pdev->dev.of_node,
 			"qcom,actuator-type", &temp_str);
@@ -2824,6 +2888,8 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		return rc;
 	}
 
+	hap_info("nubia hap->play_mode:%d [%s] ",hap->play_mode,temp_str);
+
 	hap->vmax_mv = QPNP_HAP_VMAX_MAX_MV;
 	rc = of_property_read_u32(pdev->dev.of_node, "qcom,vmax-mv", &temp);
 	if (!rc) {
@@ -2833,6 +2899,8 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		return rc;
 	}
 
+	hap_info("nubia hap->vmax_mv:%d  ",hap->vmax_mv);
+
 	hap->ilim_ma = QPNP_HAP_ILIM_MIN_MV;
 	rc = of_property_read_u32(pdev->dev.of_node, "qcom,ilim-ma", &temp);
 	if (!rc) {
@@ -2841,6 +2909,8 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		pr_err("Unable to read ILim\n");
 		return rc;
 	}
+
+	hap_info("nubia hap->ilim_ma:%d  ",hap->ilim_ma);
 
 	hap->sc_deb_cycles = QPNP_HAP_DEF_SC_DEB_CYCLES;
 	rc = of_property_read_u32(pdev->dev.of_node,
@@ -2878,6 +2948,8 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		pr_err("Unable to read wav shape\n");
 		return rc;
 	}
+
+	hap_info("nubia hap->wave_shape:%d [%s] ",hap->wave_shape,temp_str);
 
 	hap->wave_play_rate_us = QPNP_HAP_DEF_WAVE_PLAY_RATE_US;
 	rc = of_property_read_u32(pdev->dev.of_node,
@@ -2919,6 +2991,7 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 	if (hap->play_irq < 0)
 		pr_warn("Unable to get play irq\n");
 
+	hap_info("hap->play_irq:%d",hap->play_irq);
 	hap->sc_irq = platform_get_irq_byname(hap->pdev, "sc-irq");
 	if (hap->sc_irq < 0) {
 		pr_err("Unable to get sc irq\n");
