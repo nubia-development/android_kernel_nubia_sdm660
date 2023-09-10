@@ -1,0 +1,12 @@
+
+menu "nubia fingerprint driver"
+
+config NUBIA_SUNWAVE_FINGERPRINT
+        bool "config nubia fingerprint sunwave"
+        default n
+        help
+          Say Y here if you have a nubia fingerprint sunwave connected
+          to your system.
+	  If unsure, say N.
+
+endmenu
