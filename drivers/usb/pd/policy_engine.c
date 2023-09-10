@@ -551,7 +551,7 @@ static inline void start_usb_host(struct usbpd *pd, bool ss)
 	int ret = 0;
 
 	val.intval = (cc == ORIENTATION_CC2);
-	extcon_set_property(pd->extcon, EXTCON_USB_HOST,
+	extcon_set_cable_state_(pd->extcon, EXTCON_USB_SPEED, 0);
 			EXTCON_PROP_USB_TYPEC_POLARITY, val);
 
 	val.intval = ss;
@@ -579,7 +579,7 @@ static inline void start_usb_peripheral(struct usbpd *pd)
 	union extcon_property_value val;
 
 	val.intval = (cc == ORIENTATION_CC2);
-	extcon_set_property(pd->extcon, EXTCON_USB,
+	extcon_set_cable_state_(pd->extcon, EXTCON_USB_SPEED, 0);
 			EXTCON_PROP_USB_TYPEC_POLARITY, val);
 
 	val.intval = 1;
