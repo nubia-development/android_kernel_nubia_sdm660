@@ -195,7 +195,7 @@
 			snps,dis_enblslpm_quirk;
 			snps,usb3_lpm_capable;
 			usb-core-id = <0>;
-			maximum-speed = "super-speed";
+			maximum-speed = "high-speed";
 		};
 
 		qcom,usbbam@a904000 {
@@ -278,9 +278,10 @@
 		qcom,tune2-efuse-bit-pos = <25>;
 		qcom,tune2-efuse-num-bits = <4>;
 		qcom,qusb-phy-init-seq = <0xf8 0x80
-					0xb3 0x84
+					0x90 0x84
 					0x83 0x88
 					0xc0 0x8c
+					0x03 0x90
 					0x30 0x08
 					0x79 0x0c
 					0x21 0x10
