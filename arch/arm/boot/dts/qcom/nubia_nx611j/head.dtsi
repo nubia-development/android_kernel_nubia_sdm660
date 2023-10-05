@@ -1,7 +1,0 @@
-/*
- * nubia overwrite dts
- */
-
-#include "display.dtsi"
-#include "touch.dtsi"
-#include "sensors.dtsi"
