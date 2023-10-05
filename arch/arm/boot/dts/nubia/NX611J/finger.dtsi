@@ -1,0 +1,86 @@
+/*
+  *    add nubia fingerprint
+  */
+
+&soc {
+	qcom_fp@6 {
+        status = "ok";
+		/*reg = <0>;*/
+		compatible = "sunwave,fingerprint";
+		interrupt-parent = <&tlmm>;
+		interrupts = <97 0>;
+		pinctrl-names = "default", "power_on", "power_off", "reset_low", "reset_high";
+		pinctrl-0 = <&fingerprint_default>;
+		pinctrl-1 = <&fingerprint_power_on>;
+		pinctrl-2 = <&fingerprint_power_off>;
+		pinctrl-3 = <&fingerprint_reset_low>;
+		pinctrl-4 = <&fingerprint_reset_high>;
+		sunwave,gpio_int = <&tlmm 72 0x00>;
+	};
+
+	qcom,qbt1000 {
+                /delete-property/ qcom,finger-detect-gpio;
+	};
+};
+
+&tlmm {
+	fingerprint_default: state_default {
+	};
+
+	fingerprint_power_on: fingerprint_power_on {
+		mux {
+			pins = "gpio56";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio56";
+			drive_strength = <2>;
+			output-high;
+			bias-disable;
+		};
+	};
+
+	fingerprint_power_off: fingerprint_power_off {
+		mux {
+			pins = "gpio56";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio56";
+			drive_strength = <2>;
+			output-low;
+			bias-disable;
+		};
+	};
+
+
+	fingerprint_reset_low: fingerprint_reset_low {
+		mux {
+			pins = "gpio20";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio20";
+			drive_strength = <2>;
+			output-low;
+			bias-disable;
+		};
+	};
+
+	fingerprint_reset_high: fingerprint_reset_high {
+		mux {
+			pins = "gpio20";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio20";
+			drive_strength = <2>;
+			output-high;
+			bias-disable;
+		};
+	};
+};
