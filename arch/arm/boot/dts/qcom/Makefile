@@ -212,10 +212,6 @@ endif
 
 dtb-$(CONFIG_ARCH_MSMHAMSTER) += msmhamster-rumi.dtb
 
-ifeq ($(CONFIG_MACH_NUBIA_NX611J),y)
-dtb-$(CONFIG_MACH_NUBIA_NX611J) += sdm660-mtp-NX611J.dtb \
-	sdm636-mtp-NX611J.dtb
-else
 dtb-$(CONFIG_ARCH_SDM660) += sdm660-sim.dtb \
 	sdm660-internal-codec-cdp.dtb \
 	sdm660-internal-codec-mtp.dtb \
@@ -328,7 +324,6 @@ dtb-$(CONFIG_ARCH_SDM630) += sdm630-rumi.dtb \
 	sdm455-cdp.dtb \
 	sdm455-rcm.dtb \
 	sdm455-internal-codec-rcm.dtb
-endif
 
 ifeq ($(CONFIG_ARM64),y)
 always          := $(dtb-y)

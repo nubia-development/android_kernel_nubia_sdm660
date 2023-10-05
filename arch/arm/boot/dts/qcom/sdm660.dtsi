@@ -684,7 +684,7 @@
 			<&clock_gcc GCC_BLSP1_AHB_CLK>;
 		clock-frequency = <15000000>;
 		qcom,ipc-gpio = <&tlmm 72 0>;
-//		qcom,finger-detect-gpio = <&pm660_gpios 11 0>;
+		qcom,finger-detect-gpio = <&pm660_gpios 11 0>;
 	};
 
 	qcom,sensor-information {
