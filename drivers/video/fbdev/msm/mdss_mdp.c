@@ -55,7 +55,7 @@
 #include "mdss_mdp_trace.h"
 
 #if defined (CONFIG_NUBIA_DISP_LCD_PANEL_ID)
-#include "../../nubia/display/nubia_lcd_feature.h"
+#include "../../../nubia/display/nubia_lcd_feature.h"
 #endif
 
 #define AXI_HALT_TIMEOUT_US	0x4000

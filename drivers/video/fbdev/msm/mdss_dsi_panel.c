@@ -23,10 +23,10 @@
 #include "mdss_livedisplay.h"
 
 #if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO) || defined(CONFIG_NUBIA_DISP_KEEP_POWER_ON)
-#include "../../nubia/display/nubia_lcd_feature.h"
+#include "../../../nubia/display/nubia_lcd_feature.h"
 #endif
 #if defined (CONFIG_NUBIA_DISP_LCD_PREFERENCE) || defined (CONFIG_NUBIA_LCD_BACKLIGHT_CURVE)
-#include "../../nubia/display/nubia_disp_preference.h"
+#include "../../../nubia/display/nubia_disp_preference.h"
 #endif
 
 #define DT_CMD_HDR 6

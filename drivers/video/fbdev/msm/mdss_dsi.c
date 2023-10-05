@@ -26,7 +26,7 @@
 #include "mdss_livedisplay.h"
 
 #if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)|| defined(CONFIG_NUBIA_DISP_KEEP_POWER_ON)
-#include "../../nubia/display/nubia_lcd_feature.h"
+#include "../../../nubia/display/nubia_lcd_feature.h"
 #endif
 
 #define CMDLINE_DSI_CTL_NUM_STRING_LEN 2

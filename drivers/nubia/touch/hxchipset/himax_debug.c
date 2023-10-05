@@ -3164,6 +3164,7 @@ static int nubia_request_firmware(const char *name, long *size, char **data)
 	int retval = 0;
 	long img_size;
 	char *img_data;
+        enum kernel_read_file_id id = READING_FIRMWARE;
 
 	memset(img_path, 0, 100);
 	snprintf(img_path, 100, "%s/%s","/mnt/sdcard", name);
@@ -3196,7 +3197,7 @@ static int nubia_request_firmware(const char *name, long *size, char **data)
 		}
 		goto exit;
 	}
-	retval = security_kernel_fw_from_file(file_loadimg, img_data, img_size);
+	retval = security_kernel_post_read_file(file_loadimg, img_data, img_size,id);
 	if(retval)
 	{
 		pr_err("[TP]security_kernel_fw_from_file fail\n");

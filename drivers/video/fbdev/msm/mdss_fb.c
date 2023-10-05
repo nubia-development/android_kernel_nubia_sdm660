@@ -48,7 +48,7 @@
 #include "mdss_sync.h"
 
 #ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
-#include "../../nubia/display/nubia_disp_preference.h"
+#include "../../../nubia/display/nubia_disp_preference.h"
 #endif
 
 #include "mdss_livedisplay.h"

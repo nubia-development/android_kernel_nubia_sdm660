@@ -607,9 +607,7 @@ ATTRIBUTE_GROUPS(batt_class);
  *  FCC  *
  **********/
 #define EFFICIENCY_PCT	80
-#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
 #define MIN_SPLIT_CHANGE_CURRENT_UA		300000
-#endif
 #define STEP_UP 1
 #define STEP_DOWN -1
 static void get_fcc_split(struct pl_data *chip, int total_ua,
@@ -658,21 +656,13 @@ static void get_fcc_split(struct pl_data *chip, int total_ua,
 	 * through main charger's BATFET, keep the main charger's FCC
 	 * to the votable result.
 	 */
-#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
-	*slave_ua = min(*slave_ua, total_ua - MIN_SPLIT_CHANGE_CURRENT_UA);
 	if (chip->pl_batfet_mode == POWER_SUPPLY_PL_STACKED_BATFET) {
-		*master_ua = max(MIN_SPLIT_CHANGE_CURRENT_UA, total_ua);
-	else
-		*master_ua = max(MIN_SPLIT_CHANGE_CURRENT_UA, total_ua - *slave_ua);
-#else
-	if (chip->pl_mode == POWER_SUPPLY_PL_USBIN_USBIN)
 		*master_ua = max(0, total_ua);
 		if (chip->main_fcc_max)
 			*master_ua = min(*master_ua,
 					chip->main_fcc_max + *slave_ua);
 	} else {
 		*master_ua = max(0, total_ua - *slave_ua);
-#endif
 		if (chip->main_fcc_max)
 			*master_ua = min(*master_ua, chip->main_fcc_max);
 	}

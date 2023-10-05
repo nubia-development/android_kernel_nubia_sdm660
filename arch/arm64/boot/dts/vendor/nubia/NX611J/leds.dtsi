@@ -1,3 +1,4 @@
+/*
 &red_led {
 				label = "rgb";
 				qcom,id = <3>;
@@ -79,3 +80,5 @@
 				nubia,grade_percentage = <30>;
 				nubia,grade_scale_offset = <0> ;
 			};
+*/
+

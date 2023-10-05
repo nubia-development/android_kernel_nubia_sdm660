@@ -55,7 +55,7 @@
 #include <linux/notifier.h>
 #endif
 
-#include <linux/wakelock.h>
+//#include <linux/wakelock.h>
 
 #include "sf_ctl.h"
 
@@ -551,7 +551,7 @@ static int sf_ctl_release(struct inode *inode, struct file *filp)
 #if MULTI_HAL_COMPATIBLE
 
     if ((!sf_ctl_dev.isOpen) && (sf_ctl_dev.isInitialize == 1)) {
-        //close �? 且初已初始化
+        //close ��? 且初已初始化
         sf_ctl_free_gpio();
     }
 
