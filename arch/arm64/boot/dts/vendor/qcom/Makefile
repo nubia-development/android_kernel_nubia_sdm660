@@ -274,10 +274,6 @@ dtb-$(CONFIG_ARCH_KHAJE) += khaje-idp.dtb \
 		khaje-atp.dtb
 endif
 
-ifeq ($(CONFIG_MACH_NUBIA_NX611J),y)
-dtb-$(CONFIG_MACH_NUBIA_NX611J) += sdm660-mtp-NX611J.dtb \
-	sdm636-mtp-NX611J.dtb
-else
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
         dtbo-$(CONFIG_ARCH_SDM660) += \
                 sdm660-mtp-external-codec-overlay.dtbo \
@@ -360,7 +356,6 @@ sdm660-internal-codec-cdp.dtb \
         sdm636-pm660a-rcm.dtb \
         sdm636-usbc-audio-mtp.dtb \
         sdm636-usbc-audio-rcm.dtb
-endif
 endif
 
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
