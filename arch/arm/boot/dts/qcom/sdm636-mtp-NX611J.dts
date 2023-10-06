@@ -13,8 +13,8 @@
 
 /dts-v1/;
 
-#include "NX611J/sdm636.dtsi"
-#include "NX611J/sdm636-mtp.dtsi"
+#include "sdm636.dtsi"
+#include "sdm636-mtp.dtsi"
 #include "sdm660-internal-codec.dtsi"  //nubia modify
 
 / {
@@ -28,4 +28,5 @@
 &tavil_snd {
 	qcom,msm-mbhc-moist-cfg = <0>, <0>, <3>;
 };
-#include "NX611J/sdm660-nubia-head.dtsi"
+
+#include NUBIA_OVERWRITE_DTSI_FILE

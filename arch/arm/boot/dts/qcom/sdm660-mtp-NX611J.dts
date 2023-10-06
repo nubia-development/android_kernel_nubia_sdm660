@@ -13,8 +13,8 @@
 
 /dts-v1/;
 
-#include "NX611J/sdm660.dtsi"
-#include "NX611J/sdm660-mtp.dtsi"
+#include "sdm660.dtsi"
+#include "sdm660-mtp.dtsi"
 #include "sdm660-internal-codec.dtsi"  //nubia modify
 
 / {
@@ -36,4 +36,6 @@
 &soc {
 	/delete-node/sound-9335;
 };
-#include "NX611J/sdm660-nubia-head.dtsi"
+
+
+#include NUBIA_OVERWRITE_DTSI_FILE

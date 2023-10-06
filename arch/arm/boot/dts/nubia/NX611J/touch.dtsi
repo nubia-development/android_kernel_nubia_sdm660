@@ -1,10 +1,8 @@
 /*
   *    add nubia touch
   */
- 
 &i2c_4 {
 	status = "okay";
-
 	himax-ts@48 {
 		status = "okay";
 		compatible = "himax,hxcommon";
@@ -17,7 +15,6 @@
 		himax,irq-gpio = <&tlmm 67 0x00>;
 		report_type = <1>;
 	};
-
 	/* Novatek device tree node */
 	novatek@62 {
 		compatible = "novatek,NVT-ts";
@@ -26,5 +23,3 @@
 		novatek,irq-gpio = <&tlmm 67 0x2001>;
 	};
 };
-
-

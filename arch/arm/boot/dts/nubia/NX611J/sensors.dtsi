@@ -10,11 +10,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
-
-/*
- * Add nubia sensors
- */
 &i2c_6 {
 	ams@39 {
 		compatible = "tmd2725";
@@ -58,7 +53,3 @@
 		};
 	};
 };
-
-
-
-

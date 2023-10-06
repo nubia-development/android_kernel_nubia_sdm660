@@ -1,0 +1,70 @@
+/*
+ * nubia overwrite dts
+ */
+
+&spmi_bus {
+	qcom,pm660@0 {
+		qcom,power-on@800 {
+			qcom,pon_1 {
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <10256>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <7>;
+			};
+		};
+	};
+};
+
+&pm660_rtc {
+        qcom,qpnp-rtc-alarm-pwrup = <1>;
+};
+
+&sdhc_2 {
+        status = "disabled";
+};
+
+&i2c_2 {
+	status = "disabled";
+};
+
+&wdog {
+        qcom,bark-time = <25000>;
+        qcom,pet-time = <15000>;
+};
+
+&soc {
+	reserved-memory {
+		pstore_reserve_mem: pstore_reserve_mem_region@97100000 {
+			reg = <0x0 0x97100000 0x0 0x00100000>;
+			label = "pstore_reserve_mem";
+		};
+	};
+
+	qcom,bcl {
+		qcom,ibat-monitor {
+			qcom,soc-low-threshold = <5>;
+		};
+	};
+};
+
+&cdc_pdm_gpios {
+ 	status = "okay"; //nubia modify
+};
+
+&cdc_comp_gpios {
+	status = "okay"; //nubia modify
+};
+
+&pm660_l5 {
+			regulator-max-microvolt = <2800000>;
+};
+
+&pm660_l14 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+};
+
+&pm660l_l3 {
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+};

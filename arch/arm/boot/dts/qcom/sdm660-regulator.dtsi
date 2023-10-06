@@ -276,8 +276,8 @@
 	rpm-regulator-ldoa14 {
 		status = "okay";
 		pm660_l14: regulator-l14 {
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
+			regulator-min-microvolt = <1710000>;
+			regulator-max-microvolt = <1900000>;
 			status = "okay";
 		};
 	};
@@ -342,8 +342,8 @@
 	rpm-regulator-ldob3 {
 		status = "okay";
 		pm660l_l3: regulator-l3 {
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
+			regulator-min-microvolt = <1710000>;
+			regulator-max-microvolt = <3600000>;
 			status = "okay";
 		};
 	};

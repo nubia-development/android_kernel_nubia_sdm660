@@ -1,0 +1,118 @@
+&tlmm {
+		spk_external_pa {
+			spk_external_pa_sleep: spk_external_pa_sleep {
+				mux {
+					pins = "gpio55";
+					function = "gpio";
+				};
+				config {
+					pins = "gpio55";
+					drive-strength = <2>;
+					bias-pull-down;
+					output-low;
+				};
+			};
+
+			spk_external_pa_active: spk_external_pa_active {
+				mux {
+					pins = "gpio55";
+					function = "gpio";
+				};
+				config {
+					pins = "gpio55";
+					drive-strength = <2>;
+					bias-disable;
+					output-high;
+				};
+			};
+		};
+
+		nubia_gpio {
+			nubia_gpio_default: nubia_gpio_default{
+				mux {
+					pins = "gpio26", "gpio27", "gpio61", "gpio62";
+					function = "gpio";
+				};
+
+				config {
+					pins = "gpio26", "gpio27", "gpio61", "gpio62";
+					drive-strength = <2>; /* 2 mA */
+					bias-pull-up; /* pull up */
+					input-enable;
+				};
+			};
+			nubia_gpio_pulldown: nubia_gpio_pulldown{
+				mux {
+					pins = "gpio26", "gpio27", "gpio61", "gpio62";
+					function = "gpio";
+				};
+
+				config {
+					pins = "gpio26", "gpio27", "gpio61", "gpio62";
+					drive-strength = <2>; /* 2 mA */
+					bias-pull-down; /* pull down */
+					input-enable;
+				};
+			};
+	    };
+};
+
+&soc {
+	gpio_keys {
+		voice_key {
+			label = "voice_key";
+			gpios = <&tlmm 54 0x1>;
+			linux,input-type = <1>;
+			linux,code = <216>;
+			debounce-interval = <15>;
+		};
+	};
+
+	keyreset {
+		compatible = "nubia,keyreset";
+		keys-down = <0x73 0x72>;
+		keys-up = <0x73 0x72>;
+		keyreset-need-panic;
+		key_down_delay = <20>;
+	};
+
+	//nubia add hw version
+	nubia_hw_ver_gpio: nubia_hw_gpio_ctrl {
+		compatible = "qcom,nubia_hw-gpio-ctrl";
+		qcom,pcb-gpio1 = <&tlmm 61 0>;
+		qcom,pcb-gpio2 = <&tlmm 62 0>;
+		qcom,rf-gpio1 = <&tlmm  26 0>;
+		qcom,rf-gpio2 = <&tlmm 27 0>;
+		//qcom,config-gpio1 = <&tlmm 59 0>;
+		//qcom,config-gpio2 = <&tlmm 60 0>;
+		//qcom,pm-gpio1 = <&pm8998_gpios 12 0>;
+		//qcom,pm-gpio2 = <&pm8998_gpios 12 0>;
+		//qcom,pcb-pm-adc_channel = <0x38>;
+		//qcom,config-pm-adc_channel = <0x51>;//powerup 100k
+		//qcom,nubia_hw-vadc = <&pm8998_vadc>;
+		pinctrl-names = "pull_up_default","pull_down_default";
+		pinctrl-0 = <&nubia_gpio_default>;
+		pinctrl-1 = <&nubia_gpio_pulldown>;
+	};
+};
+
+&gpio_key_active {
+				mux {
+					pins = "gpio54", "gpio64", "gpio113";
+				};
+
+				config {
+					pins = "gpio54", "gpio64", "gpio113";
+				};
+};
+
+&gpio_key_suspend {
+				mux {
+					pins = "gpio54", "gpio64", "gpio113";
+				};
+
+				config {
+					pins = "gpio54", "gpio64", "gpio113";
+				};
+};
+
