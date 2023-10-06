@@ -10,7 +10,6 @@
  * GNU General Public License for more details.
  */
 
-/*#define DEBUG */
 #include <linux/input.h>
 #include <linux/of_gpio.h>
 #include <linux/mfd/msm-cdc-pinctrl.h>

@@ -27,6 +27,7 @@
 #include "mdss_dba_utils.h"
 #include "mdss_debug.h"
 #include "mdss_livedisplay.h"
+
 #if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO) || defined(CONFIG_NUBIA_DISP_KEEP_POWER_ON)
 #include "../../nubia/display/nubia_lcd_feature.h"
 #endif

@@ -195,7 +195,7 @@ config HIGH_RES_TIMERS
 	  
 config NUBIA_POWEROFF_CHARGE_MODE_POWEROFF_ALARM
 	bool "Power off charge mode alarm reboot support"
-	default y
+	default n
 	help
 	  nubia feature: if set,in power off charge mode,
 	  when poweroff alarm trigger,

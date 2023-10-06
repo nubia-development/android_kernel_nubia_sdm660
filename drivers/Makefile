@@ -79,7 +79,6 @@ obj-$(CONFIG_SPMI)		+= spmi/
 obj-$(CONFIG_SLIMBUS)		+= slimbus/
 obj-$(CONFIG_SOUNDWIRE)		+= soundwire/
 obj-y				+= hsi/
-obj-$(CONFIG_NUBIA_HW_VERSION)         += nubia_hw_version/
 obj-y				+= net/
 obj-$(CONFIG_ATM)		+= atm/
 obj-$(CONFIG_FUSION)		+= message/
@@ -185,5 +184,6 @@ obj-$(CONFIG_BIF)		+= bif/
 
 obj-$(CONFIG_SENSORS_SSC)	+= sensors/
 obj-$(CONFIG_ESOC)              += esoc/
-obj-$(CONFIG_NUBIA_DRIVERS)	+= nubia/
 obj-$(CONFIG_TEE)		+= tee/
+obj-$(CONFIG_NUBIA_DRIVERS)	+= nubia/
+obj-$(CONFIG_NUBIA_HW_VERSION)  += nubia_hw_version/

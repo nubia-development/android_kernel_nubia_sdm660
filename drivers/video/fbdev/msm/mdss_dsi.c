@@ -35,6 +35,7 @@
 #include "mdss_dsi_phy.h"
 #include "mdss_dba_utils.h"
 #include "mdss_livedisplay.h"
+
 #if defined (CONFIG_NUBIA_DISP_LCD_VDDIO_GPIO)|| defined(CONFIG_NUBIA_DISP_KEEP_POWER_ON)
 #include "../../nubia/display/nubia_lcd_feature.h"
 #endif
@@ -413,7 +414,6 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
 		pr_debug("reset disable: pinctrl not enabled\n");
-
 
 	ret = msm_dss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,

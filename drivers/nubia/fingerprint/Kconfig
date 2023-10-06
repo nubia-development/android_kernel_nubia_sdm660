@@ -1,33 +1,12 @@
-################################################# FINGER_PRINTER START
-config  NUBIA_SENSORS_FP
-	tristate "NUBIA FP DEVICE"
-	default n
 
-if NUBIA_SENSORS_FP
+menu "nubia fingerprint driver"
 
-################################################# FINGER_PRINTER_GF5228M START
-source drivers/nubia/fingerprint/gf5228/Kconfig
-choice
-        prompt "choose the GF5228M device style"
-        depends on NUBIA_SENSORS_FP_GF5228
-        default NUBIA_SENSORS_FP_GF5228_PLATFORM
+config NUBIA_SUNWAVE_FP
+        bool "config nubia fingerprint sunwave"
+        default n
         help
-           GF5228M need to select the work style
+          Say Y here if you have a nubia fingerprint sunwave connected
+          to your system.
+	  If unsure, say N.
 
-config NUBIA_SENSORS_FP_GF5228_SPI
-        bool "GF5228M work as SPI device"
-        help
-          If you want GF5228M work as SPI device, select it.
-
-config NUBIA_SENSORS_FP_GF5228_PLATFORM
-        bool "GF5228M work as PLATFORM device"
-        help
-          If you want GF5228M work as PLATFORM device, select it.
-
-endchoice
-################################################# FINGER_PRINTER_GF5228M END
-
-
-endif
-
-
+endmenu

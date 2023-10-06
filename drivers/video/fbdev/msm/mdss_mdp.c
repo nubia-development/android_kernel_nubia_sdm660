@@ -59,6 +59,7 @@
 #include "mdss_smmu.h"
 
 #include "mdss_mdp_trace.h"
+
 #if defined (CONFIG_NUBIA_DISP_LCD_PANEL_ID)
 #include "../../nubia/display/nubia_lcd_feature.h"
 #endif

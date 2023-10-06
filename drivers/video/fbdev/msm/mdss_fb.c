@@ -55,6 +55,7 @@
 #include "mdss_debug.h"
 #include "mdss_smmu.h"
 #include "mdss_mdp.h"
+
 #ifdef CONFIG_NUBIA_LCD_BACKLIGHT_CURVE
 #include "../../nubia/display/nubia_disp_preference.h"
 #endif
@@ -3818,7 +3819,6 @@ skip_commit:
 			(mfd->mdp.signal_retire_fence))
 			mfd->mdp.signal_retire_fence(mfd, 1);
 	}
-
 	if (dynamic_dsi_switch) {
 		MDSS_XLOG(mfd->index, mfd->split_mode, new_dsi_mode,
 			XLOG_FUNC_EXIT);
@@ -4752,6 +4752,7 @@ static int mdss_fb_atomic_commit_ioctl(struct fb_info *info,
 		return -EINVAL;
 
 	mdp5_data = mfd_to_mdp5_data(mfd);
+
 	if (mfd->panel_info->panel_dead) {
 		pr_debug("early commit return\n");
 		MDSS_XLOG(mfd->panel_info->panel_dead);

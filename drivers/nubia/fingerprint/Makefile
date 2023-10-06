@@ -1,2 +1,1 @@
-obj-y           += sunwave_fp/
-
+obj-$(CONFIG_NUBIA_SUNWAVE_FP)	+= sf_ctl.o sf_spi.o

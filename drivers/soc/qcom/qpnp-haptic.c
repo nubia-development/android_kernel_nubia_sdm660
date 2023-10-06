@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2015, 2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -416,10 +416,12 @@ struct qpnp_hap {
 	bool				auto_mode;
 	bool				override_auto_mode_config;
 	bool				play_irq_en;
+
 #ifdef CONFIG_FEATURE_ZTEMT_HAPTIC_VIBRATOR
 	u32 ztemt_vibrator_ms;
 	u32 ztemt_last_play_time_ms;
 #endif
+
 };
 
 static struct qpnp_hap *ghap;
@@ -2133,7 +2135,7 @@ static int qpnp_hap_auto_mode_config(struct qpnp_hap *hap, int time_ms)
 
 	old_ares_mode = hap->ares_cfg.auto_res_mode;
 	old_play_mode = hap->play_mode;
-	pr_info("auto_mode, time_ms: %d\n", time_ms);
+	pr_debug("auto_mode, time_ms: %d\n", time_ms);
 	if (time_ms <= 20) {
 		wave_samp[0] = QPNP_HAP_WAV_SAMP_MAX;
 		wave_samp[1] = QPNP_HAP_WAV_SAMP_MAX;

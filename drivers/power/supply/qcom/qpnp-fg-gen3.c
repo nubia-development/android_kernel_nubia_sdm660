@@ -1163,24 +1163,6 @@ static void fg_notify_charger(struct fg_chip *chip)
 	if (!chip->profile_available)
 		return;
 
-#if defined(CONFIG_NUBIA_HW_STEP_CHARGE_FEATURE)
-	if(!strcmp(chip->bp.batt_type_str, "atl_3450mah_step")){
-		prop.intval = 1;
-		rc = power_supply_set_property(chip->batt_psy,
-				POWER_SUPPLY_PROP_STEP_CHARGING_ENABLED, &prop);
-		if (rc < 0) {
-			pr_err("Error in setting step charging enable property on batt_psy, rc=%d\n",
-				rc);
-			return;
-		}
-	}
-	#endif
-
-	#if defined(CONFIG_NUBIA_CHARGE_FEATURE)
-	if(chip->bp.float_volt_uv < 0 ||chip->bp.fastchg_curr_ma <0)
-		return;
-#endif
-
 	prop.intval = chip->bp.float_volt_uv;
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_VOLTAGE_MAX, &prop);
